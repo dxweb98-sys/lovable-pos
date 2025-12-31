@@ -12,6 +12,7 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Dashboard from "./pages/Dashboard";
 import Reports from "./pages/Reports";
+import Expenses from "./pages/Expenses";
 import Subscription from "./pages/Subscription";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
@@ -102,6 +103,14 @@ const AppRoutes = () => {
         element={
           <AuthProtectedRoute>
             <Reports />
+          </AuthProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/expenses" 
+        element={
+          <AuthProtectedRoute>
+            <Expenses />
           </AuthProtectedRoute>
         } 
       />

@@ -8,19 +8,16 @@ import {
   Building2,
   CreditCard,
   Receipt,
-  DollarSign,
-  MinusCircle,
-  Plus,
+  BarChart3,
   Calendar,
-  AlertCircle,
   Save,
-  Trash2
+  AlertCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format, subDays, isAfter, startOfDay } from 'date-fns';
 import { PageHeader } from '@/components/PageHeader';
 import { GlassNavigation } from '@/components/GlassNavigation';
-import { usePOS, Expense } from '@/context/POSContext';
+import { usePOS } from '@/context/POSContext';
 import { useAuth } from '@/context/AuthContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useToast } from '@/hooks/use-toast';
@@ -61,10 +58,6 @@ const Profile: React.FC = () => {
   const [showPaymentSettings, setShowPaymentSettings] = useState(false);
   const [showReceiptSettings, setShowReceiptSettings] = useState(false);
   const [showTransactionHistory, setShowTransactionHistory] = useState(false);
-  const [showExpenses, setShowExpenses] = useState(false);
-  
-  const [newExpenseDesc, setNewExpenseDesc] = useState('');
-  const [newExpenseAmount, setNewExpenseAmount] = useState('');
   
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -94,19 +87,11 @@ const Profile: React.FC = () => {
     showPhone: true,
   });
   
-  const { transactions, expenses, addExpense, removeExpense } = usePOS();
+  const { transactions } = usePOS();
   const { user, profile, signOut } = useAuth();
   const { currentPlan } = useSubscription();
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  // Calculate today's expenses total
-  const todayExpenses = useMemo(() => {
-    const today = startOfDay(new Date());
-    return expenses.filter(e => startOfDay(new Date(e.date)).getTime() === today.getTime());
-  }, [expenses]);
-
-  const todayExpensesTotal = todayExpenses.reduce((sum, e) => sum + e.amount, 0);
 
   // Filter transactions by date with 7-day limit for free users
   const filteredHistoryTransactions = useMemo(() => {
@@ -122,30 +107,6 @@ const Profile: React.FC = () => {
     if (currentPlan !== 'free') return false;
     const sevenDaysAgo = startOfDay(subDays(new Date(), 7));
     return !isAfter(date, sevenDaysAgo) && startOfDay(date).getTime() !== sevenDaysAgo.getTime();
-  };
-
-  const handleAddExpense = () => {
-    if (!newExpenseDesc.trim() || !newExpenseAmount) return;
-    
-    addExpense({
-      description: newExpenseDesc.trim(),
-      amount: parseFloat(newExpenseAmount) || 0,
-    });
-    
-    setNewExpenseDesc('');
-    setNewExpenseAmount('');
-    
-    toast({
-      title: 'Expense added',
-      description: `$${parseFloat(newExpenseAmount).toFixed(2)} for ${newExpenseDesc.trim()}`,
-    });
-  };
-
-  const handleRemoveExpense = (id: string) => {
-    removeExpense(id);
-    toast({
-      title: 'Expense removed',
-    });
   };
 
   const handleLogout = async () => {
@@ -229,11 +190,10 @@ const Profile: React.FC = () => {
       action: () => setShowReceiptSettings(true),
     },
     {
-      icon: MinusCircle,
-      label: 'Expenses',
-      description: `Today: $${todayExpensesTotal.toFixed(2)}`,
-      action: () => setShowExpenses(true),
-      highlighted: true,
+      icon: BarChart3,
+      label: 'Reports',
+      description: 'Sales analytics & exports',
+      action: () => navigate('/reports'),
     },
     {
       icon: Calendar,
@@ -332,112 +292,6 @@ const Profile: React.FC = () => {
           Sign Out
         </button>
       </main>
-
-      {/* Expenses Drawer */}
-      <Drawer open={showExpenses} onOpenChange={setShowExpenses}>
-        <DrawerContent className="max-h-[90vh] rounded-t-3xl">
-          <DrawerHeader className="pb-2">
-            <DrawerTitle className="text-xl font-bold text-center">Expenses</DrawerTitle>
-          </DrawerHeader>
-
-          <div className="px-4 pb-8 space-y-4 overflow-y-auto max-h-[70vh]">
-            {/* Today's Total */}
-            <div className="bg-destructive/10 rounded-2xl p-4 text-center">
-              <p className="text-sm text-muted-foreground">Today's Expenses</p>
-              <p className="text-3xl font-bold text-destructive">${todayExpensesTotal.toFixed(2)}</p>
-            </div>
-
-            {/* Add Expense */}
-            <div className="bg-secondary/50 rounded-2xl p-4">
-              <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                <Plus className="w-4 h-4 text-primary" />
-                Add Expense
-              </h4>
-              
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newExpenseDesc}
-                  onChange={(e) => setNewExpenseDesc(e.target.value)}
-                  placeholder="Description (e.g., Supplies)"
-                  className="flex-1 h-12 px-4 bg-background border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                />
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    type="number"
-                    value={newExpenseAmount}
-                    onChange={(e) => setNewExpenseAmount(e.target.value)}
-                    placeholder="0.00"
-                    step="0.01"
-                    min="0"
-                    className="w-24 h-12 pl-8 pr-3 bg-background border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  />
-                </div>
-                <button
-                  onClick={handleAddExpense}
-                  disabled={!newExpenseDesc.trim() || !newExpenseAmount}
-                  className="h-12 px-4 bg-primary text-primary-foreground rounded-xl flex items-center justify-center disabled:opacity-50"
-                >
-                  <Plus className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Expense List */}
-            <div className="space-y-2">
-              <h4 className="font-semibold text-foreground">Today's Expenses</h4>
-              {todayExpenses.length > 0 ? (
-                todayExpenses.map(expense => (
-                  <div key={expense.id} className="bg-card rounded-xl p-4 flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-foreground">{expense.description}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {format(new Date(expense.date), 'h:mm a')}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="font-bold text-destructive">-${expense.amount.toFixed(2)}</span>
-                      <button
-                        onClick={() => handleRemoveExpense(expense.id)}
-                        className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center text-destructive hover:bg-destructive/20 transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="bg-card rounded-xl p-8 text-center">
-                  <MinusCircle className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-muted-foreground">No expenses recorded today</p>
-                </div>
-              )}
-            </div>
-
-            {/* All Expenses */}
-            {expenses.length > todayExpenses.length && (
-              <div className="space-y-2">
-                <h4 className="font-semibold text-foreground">Previous Expenses</h4>
-                {expenses
-                  .filter(e => startOfDay(new Date(e.date)).getTime() !== startOfDay(new Date()).getTime())
-                  .slice(0, 10)
-                  .map(expense => (
-                    <div key={expense.id} className="bg-secondary/30 rounded-xl p-3 flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-foreground text-sm">{expense.description}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {format(new Date(expense.date), 'MMM d, h:mm a')}
-                        </p>
-                      </div>
-                      <span className="font-semibold text-destructive text-sm">-${expense.amount.toFixed(2)}</span>
-                    </div>
-                  ))}
-              </div>
-            )}
-          </div>
-        </DrawerContent>
-      </Drawer>
 
       {/* Change Password Drawer */}
       <Drawer open={showChangePassword} onOpenChange={setShowChangePassword}>
