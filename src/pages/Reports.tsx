@@ -29,8 +29,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 type ReportPeriod = 'daily' | 'weekly' | 'monthly' | 'custom';
 
 const Reports: React.FC = () => {
-  const { currentShift, transactions } = usePOS();
-  const { hasFeature, features, currentPlan } = useSubscription();
+  const { transactions } = usePOS();
+  const { hasFeature, currentPlan } = useSubscription();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -302,44 +302,6 @@ const Reports: React.FC = () => {
           </div>
           <PlanBadge />
         </div>
-
-        {/* Shift Status */}
-        {currentShift && (
-          <div className="bg-card rounded-2xl p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className={`w-3 h-3 rounded-full ${currentShift.isOpen ? 'bg-success animate-pulse' : 'bg-muted'}`} />
-              <span className="font-semibold text-foreground">
-                Shift {currentShift.isOpen ? 'Active' : 'Closed'}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <p className="text-muted-foreground">Opened at</p>
-                <p className="font-semibold text-foreground">
-                  {currentShift.openedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </p>
-              </div>
-              {currentShift.closedAt && (
-                <div>
-                  <p className="text-muted-foreground">Closed at</p>
-                  <p className="font-semibold text-foreground">
-                    {currentShift.closedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </div>
-              )}
-              <div>
-                <p className="text-muted-foreground">Opening Cash</p>
-                <p className="font-semibold text-foreground">${currentShift.openingCash.toFixed(2)}</p>
-              </div>
-              {currentShift.closingCash !== undefined && (
-                <div>
-                  <p className="text-muted-foreground">Closing Cash</p>
-                  <p className="font-semibold text-foreground">${currentShift.closingCash.toFixed(2)}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 gap-3">

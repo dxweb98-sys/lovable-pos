@@ -3,11 +3,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { POSProvider, usePOS } from "@/context/POSContext";
+import { POSProvider } from "@/context/POSContext";
 import { SubscriptionProvider } from "@/context/SubscriptionContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import Auth from "./pages/Auth";
-import ShiftManagement from "./pages/ShiftManagement";
 import POS from "./pages/POS";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
@@ -39,30 +38,6 @@ const AuthProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children 
   return <>{children}</>;
 };
 
-// Shift Required Route Component
-const ShiftRequiredRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isLoading } = useAuth();
-  const { currentShift } = usePOS();
-  
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-  
-  if (!user) {
-    return <Navigate to="/" replace />;
-  }
-  
-  if (!currentShift) {
-    return <Navigate to="/shift" replace />;
-  }
-  
-  return <>{children}</>;
-};
-
 // Auth Page Route - Redirect if already logged in
 const AuthRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading } = useAuth();
@@ -76,7 +51,7 @@ const AuthRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   }
   
   if (user) {
-    return <Navigate to="/shift" replace />;
+    return <Navigate to="/pos" replace />;
   }
   
   return <>{children}</>;
@@ -91,51 +66,43 @@ const AppRoutes = () => {
         </AuthRoute>
       } />
       <Route 
-        path="/shift" 
-        element={
-          <AuthProtectedRoute>
-            <ShiftManagement />
-          </AuthProtectedRoute>
-        } 
-      />
-      <Route 
         path="/pos" 
         element={
-          <ShiftRequiredRoute>
+          <AuthProtectedRoute>
             <POS />
-          </ShiftRequiredRoute>
+          </AuthProtectedRoute>
         } 
       />
       <Route 
         path="/cart" 
         element={
-          <ShiftRequiredRoute>
+          <AuthProtectedRoute>
             <Cart />
-          </ShiftRequiredRoute>
+          </AuthProtectedRoute>
         } 
       />
       <Route 
         path="/checkout" 
         element={
-          <ShiftRequiredRoute>
+          <AuthProtectedRoute>
             <Checkout />
-          </ShiftRequiredRoute>
+          </AuthProtectedRoute>
         } 
       />
       <Route 
         path="/dashboard" 
         element={
-          <ShiftRequiredRoute>
+          <AuthProtectedRoute>
             <Dashboard />
-          </ShiftRequiredRoute>
+          </AuthProtectedRoute>
         } 
       />
       <Route 
         path="/reports" 
         element={
-          <ShiftRequiredRoute>
+          <AuthProtectedRoute>
             <Reports />
-          </ShiftRequiredRoute>
+          </AuthProtectedRoute>
         } 
       />
       <Route 
@@ -149,17 +116,17 @@ const AppRoutes = () => {
       <Route 
         path="/settings" 
         element={
-          <ShiftRequiredRoute>
+          <AuthProtectedRoute>
             <Settings />
-          </ShiftRequiredRoute>
+          </AuthProtectedRoute>
         } 
       />
       <Route 
         path="/profile" 
         element={
-          <ShiftRequiredRoute>
+          <AuthProtectedRoute>
             <Profile />
-          </ShiftRequiredRoute>
+          </AuthProtectedRoute>
         } 
       />
       <Route path="*" element={<NotFound />} />

@@ -27,14 +27,11 @@ export interface Transaction {
   timestamp: Date;
 }
 
-export interface Shift {
+export interface Expense {
   id: string;
-  openedAt: Date;
-  closedAt?: Date;
-  openingCash: number;
-  closingCash?: number;
-  transactions: Transaction[];
-  isOpen: boolean;
+  description: string;
+  amount: number;
+  date: Date;
 }
 
 interface POSContextType {
@@ -49,17 +46,12 @@ interface POSContextType {
   customer: Customer | null;
   setCustomer: (customer: Customer | null) => void;
   
-  currentShift: Shift | null;
-  openShift: (openingCash: number) => void;
-  closeShift: (closingCash: number) => void;
-  
   transactions: Transaction[];
   addTransaction: (transaction: Omit<Transaction, 'id' | 'timestamp'>) => void;
   
-  isLoggedIn: boolean;
-  login: (username: string, password: string) => boolean;
-  logout: () => void;
-  currentUser: string | null;
+  expenses: Expense[];
+  addExpense: (expense: Omit<Expense, 'id' | 'date'>) => void;
+  removeExpense: (id: string) => void;
 }
 
 const POSContext = createContext<POSContextType | undefined>(undefined);
@@ -67,10 +59,8 @@ const POSContext = createContext<POSContextType | undefined>(undefined);
 export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customer, setCustomer] = useState<Customer | null>(null);
-  const [currentShift, setCurrentShift] = useState<Shift | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentUser, setCurrentUser] = useState<string | null>(null);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
 
   const addToCart = (item: Omit<CartItem, 'quantity'>) => {
     setCart(prev => {
@@ -106,28 +96,6 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  const openShift = (openingCash: number) => {
-    const newShift: Shift = {
-      id: Date.now().toString(),
-      openedAt: new Date(),
-      openingCash,
-      transactions: [],
-      isOpen: true,
-    };
-    setCurrentShift(newShift);
-  };
-
-  const closeShift = (closingCash: number) => {
-    if (currentShift) {
-      setCurrentShift({
-        ...currentShift,
-        closedAt: new Date(),
-        closingCash,
-        isOpen: false,
-      });
-    }
-  };
-
   const addTransaction = (transaction: Omit<Transaction, 'id' | 'timestamp'>) => {
     const newTransaction: Transaction = {
       ...transaction,
@@ -135,30 +103,20 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       timestamp: new Date(),
     };
     setTransactions(prev => [...prev, newTransaction]);
-    if (currentShift) {
-      setCurrentShift({
-        ...currentShift,
-        transactions: [...currentShift.transactions, newTransaction],
-      });
-    }
     clearCart();
   };
 
-  const login = (username: string, password: string): boolean => {
-    // Simple mock authentication
-    if (username && password.length >= 4) {
-      setIsLoggedIn(true);
-      setCurrentUser(username);
-      return true;
-    }
-    return false;
+  const addExpense = (expense: Omit<Expense, 'id' | 'date'>) => {
+    const newExpense: Expense = {
+      ...expense,
+      id: Date.now().toString(),
+      date: new Date(),
+    };
+    setExpenses(prev => [...prev, newExpense]);
   };
 
-  const logout = () => {
-    setIsLoggedIn(false);
-    setCurrentUser(null);
-    setCurrentShift(null);
-    clearCart();
+  const removeExpense = (id: string) => {
+    setExpenses(prev => prev.filter(e => e.id !== id));
   };
 
   return (
@@ -172,15 +130,11 @@ export const POSProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       cartCount,
       customer,
       setCustomer,
-      currentShift,
-      openShift,
-      closeShift,
       transactions,
       addTransaction,
-      isLoggedIn,
-      login,
-      logout,
-      currentUser,
+      expenses,
+      addExpense,
+      removeExpense,
     }}>
       {children}
     </POSContext.Provider>

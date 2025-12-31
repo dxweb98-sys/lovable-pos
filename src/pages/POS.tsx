@@ -4,8 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { ProductCard } from '@/components/ProductCard';
 import { CategoryPill } from '@/components/CategoryPill';
 import { GlassNavigation } from '@/components/GlassNavigation';
-import { TransactionLimitBanner, PlanBadge } from '@/components/FeatureGate';
-import { usePOS } from '@/context/POSContext';
+import { PlanBadge } from '@/components/FeatureGate';
 import { useSubscription } from '@/context/SubscriptionContext';
 
 const categories = [
@@ -30,7 +29,6 @@ const products = [
 const POS: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const { currentShift } = usePOS();
   const { canMakeTransaction } = useSubscription();
   const navigate = useNavigate();
 
@@ -40,7 +38,6 @@ const POS: React.FC = () => {
     return matchesCategory && matchesSearch;
   });
 
-  const isShiftClosed = currentShift && !currentShift.isOpen;
   const isTransactionLimitReached = !canMakeTransaction();
 
   return (
@@ -93,20 +90,8 @@ const POS: React.FC = () => {
         </div>
       </header>
 
-      {/* Transaction Limit Banner */}
-      <TransactionLimitBanner />
-
-      {/* Shift Closed Banner */}
-      {isShiftClosed && (
-        <div className="mx-4 mt-4 p-4 bg-warning/10 border border-warning/20 rounded-2xl">
-          <p className="text-sm text-warning font-medium text-center">
-            Shift is closed. Go to Reports to view data.
-          </p>
-        </div>
-      )}
-
       {/* Transaction Limit Reached Banner */}
-      {isTransactionLimitReached && !isShiftClosed && (
+      {isTransactionLimitReached && (
         <div className="mx-4 mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded-2xl">
           <p className="text-sm text-destructive font-medium text-center">
             Monthly transaction limit reached. Upgrade to continue.

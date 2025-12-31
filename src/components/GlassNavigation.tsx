@@ -17,26 +17,19 @@ const rightNavItems = [
 export const GlassNavigation: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { cartCount, currentShift } = usePOS();
+  const { cartCount } = usePOS();
   const [isCartOpen, setIsCartOpen] = useState(false);
-
-  const isShiftClosed = currentShift && !currentShift.isOpen;
-  const isCartDisabled = isShiftClosed;
 
   const renderNavItem = ({ icon: Icon, label, path }: { icon: any; label: string; path: string }) => {
     const isActive = location.pathname === path;
-    const isDisabled = isShiftClosed && path === '/pos';
     
     return (
       <button
         key={path}
-        onClick={() => !isDisabled && navigate(path)}
-        disabled={isDisabled}
+        onClick={() => navigate(path)}
         className={`flex flex-col items-center gap-0.5 py-3 flex-1 transition-all duration-300 ${
           isActive 
             ? 'text-primary' 
-            : isDisabled
-            ? 'text-muted-foreground/30 cursor-not-allowed'
             : 'text-muted-foreground hover:text-foreground'
         }`}
       >
@@ -61,19 +54,14 @@ export const GlassNavigation: React.FC = () => {
             {/* Center Cart Button */}
             <div className="relative -mt-6 mx-2">
               <button
-                onClick={() => !isCartDisabled && setIsCartOpen(true)}
-                disabled={isCartDisabled}
-                className={`w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 active:scale-95 ${
-                  isCartDisabled
-                    ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                    : 'bg-primary text-primary-foreground hover:shadow-2xl hover:scale-105'
-                }`}
+                onClick={() => setIsCartOpen(true)}
+                className="w-14 h-14 rounded-full flex items-center justify-center shadow-xl transition-all duration-300 active:scale-95 bg-primary text-primary-foreground hover:shadow-2xl hover:scale-105"
                 style={{
-                  boxShadow: isCartDisabled ? 'none' : '0 8px 32px -4px hsl(var(--primary) / 0.5)',
+                  boxShadow: '0 8px 32px -4px hsl(var(--primary) / 0.5)',
                 }}
               >
                 <ShoppingBag className="w-6 h-6" strokeWidth={2} />
-                {cartCount > 0 && !isCartDisabled && (
+                {cartCount > 0 && (
                   <span className="absolute -top-1 -right-1 min-w-[20px] h-[20px] bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center px-1 shadow-lg animate-scale-in">
                     {cartCount > 99 ? '99+' : cartCount}
                   </span>
