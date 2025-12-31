@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Search, Settings, MapPin } from 'lucide-react';
+import { Search, Settings, Crown } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { ProductCard } from '@/components/ProductCard';
 import { CategoryPill } from '@/components/CategoryPill';
 import { FloatingCartBar } from '@/components/FloatingCartBar';
 import { GlassNavigation } from '@/components/GlassNavigation';
+import { TransactionLimitBanner, PlanBadge } from '@/components/FeatureGate';
 import { usePOS } from '@/context/POSContext';
+import { useSubscription } from '@/context/SubscriptionContext';
 
 const categories = [
   { id: 'all', label: 'All', icon: '🍽️' },
@@ -29,6 +32,8 @@ const POS: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const { currentShift } = usePOS();
+  const { canMakeTransaction } = useSubscription();
+  const navigate = useNavigate();
 
   const filteredProducts = products.filter(product => {
     const matchesCategory = activeCategory === 'all' || product.category === activeCategory;
@@ -37,19 +42,28 @@ const POS: React.FC = () => {
   });
 
   const isShiftClosed = currentShift && !currentShift.isOpen;
+  const isTransactionLimitReached = !canMakeTransaction();
 
   return (
     <div className="page-container bg-background">
       {/* Header */}
       <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-lg px-4 py-4 space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <MapPin className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium">QuickPOS</span>
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-bold text-foreground">QuickPOS</span>
+            <PlanBadge />
           </div>
-          <button className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-muted transition-colors">
-            <Settings className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => navigate('/subscription')}
+              className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
+            >
+              <Crown className="w-5 h-5 text-primary" />
+            </button>
+            <button className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-muted transition-colors">
+              <Settings className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Search */}
@@ -78,11 +92,23 @@ const POS: React.FC = () => {
         </div>
       </header>
 
+      {/* Transaction Limit Banner */}
+      <TransactionLimitBanner />
+
       {/* Shift Closed Banner */}
       {isShiftClosed && (
         <div className="mx-4 mb-4 p-4 bg-warning/10 border border-warning/20 rounded-2xl">
           <p className="text-sm text-warning font-medium text-center">
             Shift is closed. Go to Reports to view data.
+          </p>
+        </div>
+      )}
+
+      {/* Transaction Limit Reached Banner */}
+      {isTransactionLimitReached && !isShiftClosed && (
+        <div className="mx-4 mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-2xl">
+          <p className="text-sm text-destructive font-medium text-center">
+            Monthly transaction limit reached. Upgrade to continue.
           </p>
         </div>
       )}
