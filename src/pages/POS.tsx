@@ -4,18 +4,18 @@ import { useNavigate } from 'react-router-dom';
 import { ProductCard } from '@/components/ProductCard';
 import { CategoryPill } from '@/components/CategoryPill';
 import { FloatingCartButton } from '@/components/FloatingCartButton';
-import { CartModal } from '@/components/CartModal';
+import { CartDrawer } from '@/components/CartDrawer';
 import { GlassNavigation } from '@/components/GlassNavigation';
 import { TransactionLimitBanner, PlanBadge } from '@/components/FeatureGate';
 import { usePOS } from '@/context/POSContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 
 const categories = [
-  { id: 'all', label: 'All', icon: '🍽️' },
-  { id: 'snack', label: 'Snack', icon: '🍟' },
-  { id: 'food', label: 'Food', icon: '🍔' },
-  { id: 'drink', label: 'Drink', icon: '🥤' },
-  { id: 'dessert', label: 'Dessert', icon: '🍰' },
+  { id: 'all', label: 'All' },
+  { id: 'snack', label: 'Snack' },
+  { id: 'food', label: 'Food' },
+  { id: 'drink', label: 'Drink' },
+  { id: 'dessert', label: 'Dessert' },
 ];
 
 const products = [
@@ -49,22 +49,22 @@ const POS: React.FC = () => {
   return (
     <div className="page-container bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-lg px-4 py-4 space-y-4">
+      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-xl px-4 py-4 space-y-4 border-b border-border/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-foreground">QuickPOS</span>
+            <span className="text-xl font-bold text-foreground">QuickPOS</span>
             <PlanBadge />
           </div>
           <div className="flex items-center gap-2">
             <button 
               onClick={() => navigate('/subscription')}
-              className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
+              className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all"
             >
               <Crown className="w-5 h-5 text-primary" />
             </button>
             <button 
               onClick={() => navigate('/settings')}
-              className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-muted transition-colors"
+              className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-muted active:scale-95 transition-all"
             >
               <Settings className="w-5 h-5" />
             </button>
@@ -79,17 +79,16 @@ const POS: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search menu..."
-            className="w-full h-12 pl-12 pr-4 bg-card border border-border rounded-2xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            className="w-full h-12 pl-12 pr-4 bg-secondary/50 border-0 rounded-2xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
           />
         </div>
 
         {/* Categories */}
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
           {categories.map(category => (
             <CategoryPill
               key={category.id}
               label={category.label}
-              icon={category.icon}
               isActive={activeCategory === category.id}
               onClick={() => setActiveCategory(category.id)}
             />
@@ -102,7 +101,7 @@ const POS: React.FC = () => {
 
       {/* Shift Closed Banner */}
       {isShiftClosed && (
-        <div className="mx-4 mb-4 p-4 bg-warning/10 border border-warning/20 rounded-2xl">
+        <div className="mx-4 mt-4 p-4 bg-warning/10 border border-warning/20 rounded-2xl">
           <p className="text-sm text-warning font-medium text-center">
             Shift is closed. Go to Reports to view data.
           </p>
@@ -111,7 +110,7 @@ const POS: React.FC = () => {
 
       {/* Transaction Limit Reached Banner */}
       {isTransactionLimitReached && !isShiftClosed && (
-        <div className="mx-4 mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-2xl">
+        <div className="mx-4 mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded-2xl">
           <p className="text-sm text-destructive font-medium text-center">
             Monthly transaction limit reached. Upgrade to continue.
           </p>
@@ -119,7 +118,7 @@ const POS: React.FC = () => {
       )}
 
       {/* Products Grid */}
-      <main className="px-4 pb-4">
+      <main className="px-4 py-4 pb-32">
         <div className="grid grid-cols-2 gap-3">
           {filteredProducts.map(product => (
             <ProductCard
@@ -136,7 +135,7 @@ const POS: React.FC = () => {
       </main>
 
       <FloatingCartButton onClick={() => setIsCartOpen(true)} />
-      <CartModal open={isCartOpen} onOpenChange={setIsCartOpen} />
+      <CartDrawer open={isCartOpen} onOpenChange={setIsCartOpen} />
       <GlassNavigation />
     </div>
   );
