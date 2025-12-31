@@ -15,7 +15,8 @@ interface CartDrawerProps {
 }
 
 export const CartDrawer: React.FC<CartDrawerProps> = ({ open, onOpenChange }) => {
-  const { cart, cartTotal, customer, setCustomer, updateQuantity, removeFromCart } = usePOS();
+  const { cart, cartTotal, customer, setCustomer, updateQuantity, removeFromCart, currentShift } = usePOS();
+  const isShiftClosed = currentShift && !currentShift.isOpen;
   const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -178,12 +179,20 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ open, onOpenChange }) =>
                 </div>
               </div>
 
-              <button
-                onClick={handleCheckout}
-                className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all btn-primary-glow"
-              >
-                Proceed to Checkout
-              </button>
+              {isShiftClosed ? (
+                <div className="w-full p-4 bg-warning/10 border border-warning/20 rounded-2xl text-center">
+                  <p className="text-sm text-warning font-medium">
+                    Shift is closed. Cannot proceed to checkout.
+                  </p>
+                </div>
+              ) : (
+                <button
+                  onClick={handleCheckout}
+                  className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all btn-primary-glow"
+                >
+                  Proceed to Checkout
+                </button>
+              )}
             </>
           )}
         </div>
