@@ -1,11 +1,18 @@
 import React from 'react';
-import { Calendar, DollarSign, ShoppingBag, TrendingUp, Clock, CreditCard } from 'lucide-react';
+import { Calendar, DollarSign, ShoppingBag, TrendingUp, Clock, CreditCard, Download, Crown } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { GlassNavigation } from '@/components/GlassNavigation';
+import { FeatureGate, PlanBadge } from '@/components/FeatureGate';
 import { usePOS } from '@/context/POSContext';
+import { useSubscription } from '@/context/SubscriptionContext';
+import { useToast } from '@/hooks/use-toast';
 
 const Reports: React.FC = () => {
   const { currentShift, transactions } = usePOS();
+  const { hasFeature, features } = useSubscription();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const todayTransactions = transactions.filter(t => {
     const today = new Date();
@@ -25,22 +32,49 @@ const Reports: React.FC = () => {
     digital: todayTransactions.filter(t => t.paymentMethod === 'digital').reduce((sum, t) => sum + t.total, 0),
   };
 
+  const handleExportReport = () => {
+    if (!hasFeature('reportExport')) {
+      toast({
+        title: 'Feature locked',
+        description: 'Upgrade to Pro to export reports.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    toast({
+      title: 'Report exported!',
+      description: 'Daily report has been downloaded.',
+    });
+  };
+
   return (
     <div className="page-container bg-background">
-      <PageHeader title="Reports" />
+      <PageHeader 
+        title="Reports" 
+        rightContent={
+          <button
+            onClick={() => navigate('/subscription')}
+            className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors"
+          >
+            <Crown className="w-5 h-5 text-primary" />
+          </button>
+        }
+      />
 
       <main className="px-4 space-y-4 pb-4">
-        {/* Date Header */}
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Calendar className="w-4 h-4" />
-          <span className="text-sm font-medium">
-            {new Date().toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </span>
+        {/* Date Header with Plan Badge */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Calendar className="w-4 h-4" />
+            <span className="text-sm font-medium">
+              {new Date().toLocaleDateString('en-US', { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric' 
+              })}
+            </span>
+          </div>
+          <PlanBadge />
         </div>
 
         {/* Shift Status */}
@@ -109,12 +143,23 @@ const Reports: React.FC = () => {
 
           <div className="bg-card rounded-2xl p-4">
             <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center mb-3">
-              <Clock className="w-5 h-5 text-accent" />
+              <Clock className="w-5 h-5 text-primary" />
             </div>
             <p className="text-sm text-muted-foreground">Items Sold</p>
             <p className="text-2xl font-bold text-foreground">{totalItems}</p>
           </div>
         </div>
+
+        {/* Export Report - Feature Gated */}
+        <FeatureGate feature="reportExport">
+          <button
+            onClick={handleExportReport}
+            className="w-full h-12 bg-primary text-primary-foreground font-medium rounded-2xl hover:opacity-90 transition-all flex items-center justify-center gap-2"
+          >
+            <Download className="w-5 h-5" />
+            Export Report
+          </button>
+        </FeatureGate>
 
         {/* Payment Breakdown */}
         <div className="bg-card rounded-2xl p-4">

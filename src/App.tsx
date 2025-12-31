@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { POSProvider, usePOS } from "@/context/POSContext";
+import { SubscriptionProvider } from "@/context/SubscriptionContext";
 import Login from "./pages/Login";
 import ShiftManagement from "./pages/ShiftManagement";
 import POS from "./pages/POS";
@@ -11,6 +12,7 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Dashboard from "./pages/Dashboard";
 import Reports from "./pages/Reports";
+import Subscription from "./pages/Subscription";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -93,6 +95,14 @@ const AppRoutes = () => {
           </ShiftRequiredRoute>
         } 
       />
+      <Route 
+        path="/subscription" 
+        element={
+          <ProtectedRoute>
+            <Subscription />
+          </ProtectedRoute>
+        } 
+      />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
@@ -101,13 +111,15 @@ const AppRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <POSProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
-      </POSProvider>
+      <SubscriptionProvider>
+        <POSProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </POSProvider>
+      </SubscriptionProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
