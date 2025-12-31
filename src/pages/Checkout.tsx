@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { FeatureGate } from '@/components/FeatureGate';
 import { QRISPaymentDrawer } from '@/components/QRISPaymentDrawer';
+import { ReceiptDrawer } from '@/components/ReceiptDrawer';
 import { usePOS } from '@/context/POSContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +21,17 @@ const Checkout: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [showQRIS, setShowQRIS] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [completedTransaction, setCompletedTransaction] = useState<{
+    items: typeof cart;
+    customer: typeof customer;
+    subtotal: number;
+    discount: number;
+    tax: number;
+    total: number;
+    paymentMethod: string;
+  } | null>(null);
+  
   const { cart, cartTotal, customer, addTransaction } = usePOS();
   const { canMakeTransaction, incrementTransactionCount, hasFeature } = useSubscription();
   const navigate = useNavigate();
@@ -52,45 +64,77 @@ const Checkout: React.FC = () => {
     setIsProcessing(true);
 
     setTimeout(() => {
-      addTransaction({
-        items: cart,
+      const transactionData = {
+        items: [...cart],
         customer: customer || undefined,
         subtotal: cartTotal,
         discount,
         tax,
         total,
         paymentMethod: selectedMethod,
-      });
+      };
 
+      addTransaction(transactionData);
       incrementTransactionCount();
       setIsProcessing(false);
-      setIsComplete(true);
-
-      toast({
-        title: 'Payment successful!',
-        description: `Transaction completed: $${total.toFixed(2)}`,
-      });
+      
+      // Check if user has receipt feature
+      if (hasFeature('receiptExport')) {
+        setCompletedTransaction(transactionData);
+        setShowReceipt(true);
+      } else {
+        setIsComplete(true);
+        toast({
+          title: 'Payment successful!',
+          description: `Transaction completed: $${total.toFixed(2)}`,
+        });
+      }
     }, 1500);
   };
 
   const handleQRISPaymentComplete = () => {
     setShowQRIS(false);
-    addTransaction({
-      items: cart,
+    
+    const transactionData = {
+      items: [...cart],
       customer: customer || undefined,
       subtotal: cartTotal,
       discount,
       tax,
       total,
       paymentMethod: 'qris',
-    });
+    };
 
+    addTransaction(transactionData);
     incrementTransactionCount();
-    setIsComplete(true);
+    
+    if (hasFeature('receiptExport')) {
+      setCompletedTransaction(transactionData);
+      setShowReceipt(true);
+    } else {
+      setIsComplete(true);
+      toast({
+        title: 'QRIS Payment successful!',
+        description: `Transaction completed: Rp ${totalInRupiah.toLocaleString('id-ID')}`,
+      });
+    }
+  };
 
+  const handleReceiptPrint = () => {
     toast({
-      title: 'QRIS Payment successful!',
-      description: `Transaction completed: Rp ${totalInRupiah.toLocaleString('id-ID')}`,
+      title: 'Receipt printed!',
+      description: 'Receipt has been sent to printer.',
+    });
+    setShowReceipt(false);
+    setIsComplete(true);
+  };
+
+  const handleReceiptClose = () => {
+    setShowReceipt(false);
+    setIsComplete(true);
+    toast({
+      title: 'Payment successful!',
+      description: `Transaction completed: $${total.toFixed(2)}`,
     });
   };
 
@@ -126,7 +170,7 @@ const Checkout: React.FC = () => {
             <p className="text-sm text-muted-foreground mt-1">
               ≈ Rp {totalInRupiah.toLocaleString('id-ID')}
             </p>
-            <p className="text-sm text-primary font-medium mt-3 capitalize">{selectedMethod} payment</p>
+            <p className="text-sm text-primary font-medium mt-3 capitalize">{completedTransaction?.paymentMethod || selectedMethod} payment</p>
           </div>
 
           <FeatureGate feature="receiptExport" showUpgradePrompt={false}>
@@ -226,6 +270,22 @@ const Checkout: React.FC = () => {
         amount={totalInRupiah}
         onPaymentComplete={handleQRISPaymentComplete}
       />
+
+      {completedTransaction && (
+        <ReceiptDrawer
+          open={showReceipt}
+          onOpenChange={setShowReceipt}
+          items={completedTransaction.items}
+          customer={completedTransaction.customer}
+          subtotal={completedTransaction.subtotal}
+          discount={completedTransaction.discount}
+          tax={completedTransaction.tax}
+          total={completedTransaction.total}
+          paymentMethod={completedTransaction.paymentMethod}
+          onPrint={handleReceiptPrint}
+          onClose={handleReceiptClose}
+        />
+      )}
     </div>
   );
 };
