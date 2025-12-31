@@ -19,13 +19,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   image,
   discount,
 }) => {
-  const { addToCart, currentShift } = usePOS();
-  const isShiftClosed = currentShift && !currentShift.isOpen;
+  const { addToCart } = usePOS();
 
   const discountedPrice = discount ? price * (1 - discount / 100) : price;
 
   const handleAdd = () => {
-    if (isShiftClosed) return;
     addToCart({ id, name, price: discountedPrice, image });
   };
 
@@ -57,12 +55,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           
           <button
             onClick={handleAdd}
-            disabled={!!isShiftClosed}
-            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
-              isShiftClosed 
-                ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                : 'bg-primary text-primary-foreground hover:scale-110 active:scale-95'
-            }`}
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 bg-primary text-primary-foreground hover:scale-110 active:scale-95"
           >
             <Plus className="w-4 h-4" />
           </button>

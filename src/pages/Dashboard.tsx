@@ -66,7 +66,7 @@ const Dashboard: React.FC = () => {
   const [newProduct, setNewProduct] = useState({ name: '', price: '', category: 'food', image: '' });
   const [newCategory, setNewCategory] = useState({ name: '' });
   
-  const { transactions, currentShift } = usePOS();
+  const { transactions } = usePOS();
 
   // Product handlers
   const handleAddProduct = () => {
@@ -136,8 +136,8 @@ const Dashboard: React.FC = () => {
   };
 
   const bestSellers = [...products].sort((a, b) => (b.sold || 0) - (a.sold || 0)).slice(0, 4);
-  const totalTransactions = currentShift?.transactions.length || transactions.length;
-  const totalRevenue = (currentShift?.transactions || transactions).reduce((sum, t) => sum + t.total, 0);
+  const totalTransactions = transactions.length;
+  const totalRevenue = transactions.reduce((sum, t) => sum + t.total, 0);
 
   return (
     <div className="page-container bg-background">
@@ -269,11 +269,11 @@ const Dashboard: React.FC = () => {
                   Recent Transactions
                 </h3>
               </div>
-              {(currentShift?.transactions || transactions).length === 0 ? (
+              {transactions.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">No transactions yet</p>
               ) : (
                 <div className="space-y-2">
-                  {(currentShift?.transactions || transactions).slice(-5).reverse().map((transaction) => (
+                  {transactions.slice(-5).reverse().map((transaction) => (
                     <button
                       key={transaction.id}
                       onClick={() => handleTransactionClick(transaction)}

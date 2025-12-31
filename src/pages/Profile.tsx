@@ -1,9 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { 
   User, 
-  Store, 
   LogOut, 
-  Square, 
   ChevronRight, 
   Crown, 
   Lock,
@@ -11,20 +9,18 @@ import {
   CreditCard,
   Receipt,
   DollarSign,
-  Clock,
   MinusCircle,
   Plus,
-  TrendingUp,
-  ShoppingBag,
   Calendar,
   AlertCircle,
-  Save
+  Save,
+  Trash2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format, subDays, isAfter, startOfDay } from 'date-fns';
 import { PageHeader } from '@/components/PageHeader';
 import { GlassNavigation } from '@/components/GlassNavigation';
-import { usePOS, Transaction } from '@/context/POSContext';
+import { usePOS, Expense } from '@/context/POSContext';
 import { useAuth } from '@/context/AuthContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useToast } from '@/hooks/use-toast';
@@ -36,12 +32,6 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-
-interface Expense {
-  id: string;
-  description: string;
-  amount: number;
-}
 
 interface StoreSettings {
   storeName: string;
@@ -66,15 +56,13 @@ interface ReceiptSettings {
 }
 
 const Profile: React.FC = () => {
-  const [showCloseShift, setShowCloseShift] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [showStoreSettings, setShowStoreSettings] = useState(false);
   const [showPaymentSettings, setShowPaymentSettings] = useState(false);
   const [showReceiptSettings, setShowReceiptSettings] = useState(false);
   const [showTransactionHistory, setShowTransactionHistory] = useState(false);
+  const [showExpenses, setShowExpenses] = useState(false);
   
-  const [closingCash, setClosingCash] = useState('');
-  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [newExpenseDesc, setNewExpenseDesc] = useState('');
   const [newExpenseAmount, setNewExpenseAmount] = useState('');
   
@@ -106,41 +94,22 @@ const Profile: React.FC = () => {
     showPhone: true,
   });
   
-  const { currentShift, closeShift, transactions } = usePOS();
+  const { transactions, expenses, addExpense, removeExpense } = usePOS();
   const { user, profile, signOut } = useAuth();
   const { currentPlan } = useSubscription();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const totalSales = currentShift?.transactions.reduce((sum, t) => sum + t.total, 0) || 0;
-  const transactionCount = currentShift?.transactions.length || 0;
-  const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-  const profit = totalSales - totalExpenses;
+  // Calculate today's expenses total
+  const todayExpenses = useMemo(() => {
+    const today = startOfDay(new Date());
+    return expenses.filter(e => startOfDay(new Date(e.date)).getTime() === today.getTime());
+  }, [expenses]);
 
-  // Calculate best-selling products
-  const bestSellingProducts = useMemo(() => {
-    if (!currentShift?.transactions.length) return [];
-    
-    const productCounts: Record<string, { name: string; quantity: number; revenue: number }> = {};
-    
-    currentShift.transactions.forEach(t => {
-      t.items.forEach(item => {
-        if (!productCounts[item.id]) {
-          productCounts[item.id] = { name: item.name, quantity: 0, revenue: 0 };
-        }
-        productCounts[item.id].quantity += item.quantity;
-        productCounts[item.id].revenue += item.price * item.quantity;
-      });
-    });
-    
-    return Object.values(productCounts)
-      .sort((a, b) => b.quantity - a.quantity)
-      .slice(0, 3);
-  }, [currentShift?.transactions]);
+  const todayExpensesTotal = todayExpenses.reduce((sum, e) => sum + e.amount, 0);
 
   // Filter transactions by date with 7-day limit for free users
   const filteredHistoryTransactions = useMemo(() => {
-    const sevenDaysAgo = startOfDay(subDays(new Date(), 7));
     const selectedDayStart = startOfDay(selectedDate);
     
     return transactions.filter(t => {
@@ -158,38 +127,30 @@ const Profile: React.FC = () => {
   const handleAddExpense = () => {
     if (!newExpenseDesc.trim() || !newExpenseAmount) return;
     
-    const expense: Expense = {
-      id: Date.now().toString(),
+    addExpense({
       description: newExpenseDesc.trim(),
       amount: parseFloat(newExpenseAmount) || 0,
-    };
+    });
     
-    setExpenses([...expenses, expense]);
     setNewExpenseDesc('');
     setNewExpenseAmount('');
+    
+    toast({
+      title: 'Expense added',
+      description: `$${parseFloat(newExpenseAmount).toFixed(2)} for ${newExpenseDesc.trim()}`,
+    });
   };
 
   const handleRemoveExpense = (id: string) => {
-    setExpenses(expenses.filter(e => e.id !== id));
-  };
-
-  const handleCloseShift = (e: React.FormEvent) => {
-    e.preventDefault();
-    const amount = parseFloat(closingCash) || 0;
-    closeShift(amount);
-    setShowCloseShift(false);
-    setClosingCash('');
-    setExpenses([]);
+    removeExpense(id);
     toast({
-      title: 'Shift closed!',
-      description: `Total sales: $${totalSales.toFixed(2)} | Profit: $${profit.toFixed(2)}`,
+      title: 'Expense removed',
     });
-    navigate('/reports');
   };
 
   const handleLogout = async () => {
     await signOut();
-    navigate('/auth');
+    navigate('/');
   };
 
   const handleChangePassword = async (e: React.FormEvent) => {
@@ -268,6 +229,12 @@ const Profile: React.FC = () => {
       action: () => setShowReceiptSettings(true),
     },
     {
+      icon: MinusCircle,
+      label: 'Expenses',
+      description: `Today: $${todayExpensesTotal.toFixed(2)}`,
+      action: () => setShowExpenses(true),
+    },
+    {
       icon: Calendar,
       label: 'Transaction History',
       description: currentPlan === 'free' ? 'Last 7 days (Free plan)' : 'View all transactions',
@@ -304,49 +271,6 @@ const Profile: React.FC = () => {
             </div>
           </div>
         </div>
-
-        {/* Current Shift Status */}
-        {currentShift && currentShift.isOpen && (
-          <div className="bg-card rounded-3xl p-6 space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-success animate-pulse" />
-                <span className="font-semibold text-foreground">Shift Active</span>
-              </div>
-              <button
-                onClick={() => setShowCloseShift(true)}
-                className="h-9 px-4 bg-destructive/10 text-destructive text-sm font-medium rounded-xl flex items-center gap-2 active:scale-95 transition-transform"
-              >
-                <Square className="w-4 h-4" />
-                Close Shift
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-secondary rounded-2xl p-4">
-                <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <Clock className="w-4 h-4" />
-                  <span className="text-xs">Started</span>
-                </div>
-                <p className="font-semibold text-foreground">
-                  {currentShift.openedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </p>
-              </div>
-
-              <div className="bg-secondary rounded-2xl p-4">
-                <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                  <DollarSign className="w-4 h-4" />
-                  <span className="text-xs">Sales</span>
-                </div>
-                <p className="font-semibold text-foreground">${totalSales.toFixed(2)}</p>
-              </div>
-            </div>
-
-            <p className="text-sm text-muted-foreground text-center">
-              {transactionCount} transactions completed
-            </p>
-          </div>
-        )}
 
         {/* Upgrade Banner */}
         {currentPlan === 'free' && (
@@ -405,155 +329,148 @@ const Profile: React.FC = () => {
         </button>
       </main>
 
-      {/* Close Shift Drawer with Expenses */}
-      <Drawer open={showCloseShift} onOpenChange={setShowCloseShift}>
+      {/* Expenses Drawer */}
+      <Drawer open={showExpenses} onOpenChange={setShowExpenses}>
         <DrawerContent className="max-h-[90vh] rounded-t-3xl">
           <DrawerHeader className="pb-2">
-            <DrawerTitle className="text-xl font-bold text-center">Close Shift</DrawerTitle>
+            <DrawerTitle className="text-xl font-bold text-center">Expenses</DrawerTitle>
           </DrawerHeader>
 
-          <form onSubmit={handleCloseShift} className="px-4 pb-8 space-y-4 overflow-y-auto max-h-[70vh]">
-            {/* Summary Cards */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-primary/10 rounded-2xl p-4">
-                <div className="flex items-center gap-2 text-primary mb-1">
-                  <DollarSign className="w-4 h-4" />
-                  <span className="text-xs font-medium">Total Sales</span>
-                </div>
-                <p className="text-xl font-bold text-foreground">${totalSales.toFixed(2)}</p>
-              </div>
-              <div className="bg-success/10 rounded-2xl p-4">
-                <div className="flex items-center gap-2 text-success mb-1">
-                  <ShoppingBag className="w-4 h-4" />
-                  <span className="text-xs font-medium">Transactions</span>
-                </div>
-                <p className="text-xl font-bold text-foreground">{transactionCount}</p>
-              </div>
+          <div className="px-4 pb-8 space-y-4 overflow-y-auto max-h-[70vh]">
+            {/* Today's Total */}
+            <div className="bg-destructive/10 rounded-2xl p-4 text-center">
+              <p className="text-sm text-muted-foreground">Today's Expenses</p>
+              <p className="text-3xl font-bold text-destructive">${todayExpensesTotal.toFixed(2)}</p>
             </div>
 
-            {/* Best Selling Products */}
-            {bestSellingProducts.length > 0 && (
-              <div className="bg-secondary/50 rounded-2xl p-4">
-                <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-primary" />
-                  Best Selling Today
-                </h4>
-                <div className="space-y-2">
-                  {bestSellingProducts.map((product, idx) => (
-                    <div key={idx} className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <span className="w-5 h-5 bg-primary/20 rounded-full flex items-center justify-center text-xs font-bold text-primary">
-                          {idx + 1}
-                        </span>
-                        <span className="text-foreground">{product.name}</span>
-                      </div>
-                      <div className="text-right">
-                        <span className="font-medium text-foreground">{product.quantity}x</span>
-                        <span className="text-muted-foreground ml-2">${product.revenue.toFixed(2)}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Expenses Section */}
+            {/* Add Expense */}
             <div className="bg-secondary/50 rounded-2xl p-4">
               <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                <MinusCircle className="w-4 h-4 text-destructive" />
-                Expenses Today
+                <Plus className="w-4 h-4 text-primary" />
+                Add Expense
               </h4>
               
-              {/* Add Expense */}
-              <div className="flex gap-2 mb-3">
+              <div className="flex gap-2">
                 <input
                   type="text"
                   value={newExpenseDesc}
                   onChange={(e) => setNewExpenseDesc(e.target.value)}
-                  placeholder="Description"
-                  className="flex-1 h-10 px-3 bg-background border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
+                  placeholder="Description (e.g., Supplies)"
+                  className="flex-1 h-12 px-4 bg-background border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
-                <input
-                  type="number"
-                  value={newExpenseAmount}
-                  onChange={(e) => setNewExpenseAmount(e.target.value)}
-                  placeholder="0"
-                  className="w-20 h-10 px-3 bg-background border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm"
-                />
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="number"
+                    value={newExpenseAmount}
+                    onChange={(e) => setNewExpenseAmount(e.target.value)}
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                    className="w-24 h-12 pl-8 pr-3 bg-background border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
                 <button
-                  type="button"
                   onClick={handleAddExpense}
-                  className="w-10 h-10 bg-primary text-primary-foreground rounded-xl flex items-center justify-center"
+                  disabled={!newExpenseDesc.trim() || !newExpenseAmount}
+                  className="h-12 px-4 bg-primary text-primary-foreground rounded-xl flex items-center justify-center disabled:opacity-50"
                 >
                   <Plus className="w-5 h-5" />
                 </button>
               </div>
+            </div>
 
-              {/* Expense List */}
-              {expenses.length > 0 ? (
-                <div className="space-y-2 max-h-32 overflow-y-auto">
-                  {expenses.map(expense => (
-                    <div key={expense.id} className="flex items-center justify-between bg-background rounded-xl p-3">
-                      <span className="text-sm text-foreground">{expense.description}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-destructive">-${expense.amount.toFixed(2)}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveExpense(expense.id)}
-                          className="text-muted-foreground hover:text-destructive"
-                        >
-                          <MinusCircle className="w-4 h-4" />
-                        </button>
-                      </div>
+            {/* Expense List */}
+            <div className="space-y-2">
+              <h4 className="font-semibold text-foreground">Today's Expenses</h4>
+              {todayExpenses.length > 0 ? (
+                todayExpenses.map(expense => (
+                  <div key={expense.id} className="bg-card rounded-xl p-4 flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-foreground">{expense.description}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(expense.date), 'h:mm a')}
+                      </p>
                     </div>
-                  ))}
-                </div>
+                    <div className="flex items-center gap-3">
+                      <span className="font-bold text-destructive">-${expense.amount.toFixed(2)}</span>
+                      <button
+                        onClick={() => handleRemoveExpense(expense.id)}
+                        className="w-8 h-8 rounded-full bg-destructive/10 flex items-center justify-center text-destructive hover:bg-destructive/20 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-2">No expenses recorded</p>
+                <div className="bg-card rounded-xl p-8 text-center">
+                  <MinusCircle className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-muted-foreground">No expenses recorded today</p>
+                </div>
               )}
             </div>
 
-            {/* Profit Summary */}
-            <div className="bg-card border border-border rounded-2xl p-4">
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-muted-foreground">Total Sales</span>
-                <span className="font-medium text-foreground">${totalSales.toFixed(2)}</span>
+            {/* All Expenses */}
+            {expenses.length > todayExpenses.length && (
+              <div className="space-y-2">
+                <h4 className="font-semibold text-foreground">Previous Expenses</h4>
+                {expenses
+                  .filter(e => startOfDay(new Date(e.date)).getTime() !== startOfDay(new Date()).getTime())
+                  .slice(0, 10)
+                  .map(expense => (
+                    <div key={expense.id} className="bg-secondary/30 rounded-xl p-3 flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-foreground text-sm">{expense.description}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(expense.date), 'MMM d, h:mm a')}
+                        </p>
+                      </div>
+                      <span className="font-semibold text-destructive text-sm">-${expense.amount.toFixed(2)}</span>
+                    </div>
+                  ))}
               </div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-muted-foreground">Total Expenses</span>
-                <span className="font-medium text-destructive">-${totalExpenses.toFixed(2)}</span>
-              </div>
-              <div className="border-t border-border pt-2 mt-2 flex justify-between">
-                <span className="font-semibold text-foreground">Net Profit</span>
-                <span className={`font-bold text-lg ${profit >= 0 ? 'text-success' : 'text-destructive'}`}>
-                  ${profit.toFixed(2)}
-                </span>
-              </div>
+            )}
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Change Password Drawer */}
+      <Drawer open={showChangePassword} onOpenChange={setShowChangePassword}>
+        <DrawerContent className="max-h-[85vh] rounded-t-3xl">
+          <DrawerHeader className="pb-2">
+            <DrawerTitle className="text-xl font-bold text-center">Change Password</DrawerTitle>
+          </DrawerHeader>
+
+          <form onSubmit={handleChangePassword} className="px-4 pb-8 space-y-4">
+            <div>
+              <label className="text-sm text-muted-foreground mb-1.5 block">New Password</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+                className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
             </div>
 
-            {/* Closing Cash */}
             <div>
-              <label className="text-sm text-muted-foreground mb-2 block">Closing Cash Amount</label>
-              <div className="relative">
-                <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <input
-                  type="number"
-                  value={closingCash}
-                  onChange={(e) => setClosingCash(e.target.value)}
-                  placeholder="0.00"
-                  step="0.01"
-                  min="0"
-                  className="w-full h-14 pl-12 pr-4 bg-secondary border-0 rounded-2xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-lg font-semibold"
-                />
-              </div>
+              <label className="text-sm text-muted-foreground mb-1.5 block">Confirm Password</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+                className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
             </div>
 
             <button
               type="submit"
-              className="w-full h-14 bg-destructive text-destructive-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              disabled={isUpdating}
+              className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
             >
-              <Square className="w-5 h-5" />
-              Close Shift
+              {isUpdating ? 'Updating...' : 'Update Password'}
             </button>
           </form>
         </DrawerContent>
@@ -566,53 +483,40 @@ const Profile: React.FC = () => {
             <DrawerTitle className="text-xl font-bold text-center">Store Settings</DrawerTitle>
           </DrawerHeader>
 
-          <div className="px-4 pb-8 space-y-4 overflow-y-auto max-h-[70vh]">
+          <div className="px-4 pb-8 space-y-4">
             <div>
-              <label className="text-sm text-muted-foreground mb-1 block">Store Logo (Emoji)</label>
-              <input
-                type="text"
-                value={storeSettings.storeLogo}
-                onChange={(e) => setStoreSettings({ ...storeSettings, storeLogo: e.target.value })}
-                className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground text-2xl text-center focus:outline-none focus:ring-2 focus:ring-primary/20"
-                maxLength={2}
-              />
-            </div>
-
-            <div>
-              <label className="text-sm text-muted-foreground mb-1 block">Store Name</label>
+              <label className="text-sm text-muted-foreground mb-1.5 block">Store Name</label>
               <input
                 type="text"
                 value={storeSettings.storeName}
                 onChange={(e) => setStoreSettings({ ...storeSettings, storeName: e.target.value })}
                 className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                placeholder="Your store name"
               />
             </div>
 
             <div>
-              <label className="text-sm text-muted-foreground mb-1 block">Address</label>
-              <textarea
+              <label className="text-sm text-muted-foreground mb-1.5 block">Address</label>
+              <input
+                type="text"
                 value={storeSettings.storeAddress}
                 onChange={(e) => setStoreSettings({ ...storeSettings, storeAddress: e.target.value })}
-                className="w-full h-20 px-4 py-3 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
-                placeholder="Store address"
+                className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
 
             <div>
-              <label className="text-sm text-muted-foreground mb-1 block">Phone Number</label>
+              <label className="text-sm text-muted-foreground mb-1.5 block">Phone</label>
               <input
                 type="tel"
                 value={storeSettings.storePhone}
                 onChange={(e) => setStoreSettings({ ...storeSettings, storePhone: e.target.value })}
                 className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                placeholder="+62 xxx xxxx xxxx"
               />
             </div>
 
             <button
               onClick={() => handleSaveSettings('Store')}
-              className="w-full h-14 bg-foreground text-background font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
             >
               <Save className="w-5 h-5" />
               Save Settings
@@ -628,84 +532,55 @@ const Profile: React.FC = () => {
             <DrawerTitle className="text-xl font-bold text-center">Payment Settings</DrawerTitle>
           </DrawerHeader>
 
-          <div className="px-4 pb-8 space-y-4 overflow-y-auto max-h-[70vh]">
+          <div className="px-4 pb-8 space-y-4">
             <div className="space-y-3">
-              {/* Cash */}
-              <div className="flex items-center justify-between p-3 bg-secondary rounded-xl">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">💵</span>
-                  <span className="font-medium text-foreground">Cash</span>
-                </div>
-                <button
-                  onClick={() => setPaymentSettings({ ...paymentSettings, cashEnabled: !paymentSettings.cashEnabled })}
-                  className={`w-12 h-7 rounded-full transition-colors ${
-                    paymentSettings.cashEnabled ? 'bg-primary' : 'bg-muted'
-                  }`}
-                >
-                  <div className={`w-5 h-5 bg-background rounded-full transition-transform ${
-                    paymentSettings.cashEnabled ? 'translate-x-6' : 'translate-x-1'
-                  }`} />
-                </button>
-              </div>
-
-              {/* Card */}
-              <div className="flex items-center justify-between p-3 bg-secondary rounded-xl">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">💳</span>
-                  <span className="font-medium text-foreground">Card</span>
-                </div>
-                <button
-                  onClick={() => setPaymentSettings({ ...paymentSettings, cardEnabled: !paymentSettings.cardEnabled })}
-                  className={`w-12 h-7 rounded-full transition-colors ${
-                    paymentSettings.cardEnabled ? 'bg-primary' : 'bg-muted'
-                  }`}
-                >
-                  <div className={`w-5 h-5 bg-background rounded-full transition-transform ${
-                    paymentSettings.cardEnabled ? 'translate-x-6' : 'translate-x-1'
-                  }`} />
-                </button>
-              </div>
-
-              {/* QRIS */}
-              <div className="flex items-center justify-between p-3 bg-secondary rounded-xl">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">📱</span>
-                  <span className="font-medium text-foreground">QRIS</span>
-                </div>
-                <button
-                  onClick={() => setPaymentSettings({ ...paymentSettings, qrisEnabled: !paymentSettings.qrisEnabled })}
-                  className={`w-12 h-7 rounded-full transition-colors ${
-                    paymentSettings.qrisEnabled ? 'bg-primary' : 'bg-muted'
-                  }`}
-                >
-                  <div className={`w-5 h-5 bg-background rounded-full transition-transform ${
-                    paymentSettings.qrisEnabled ? 'translate-x-6' : 'translate-x-1'
-                  }`} />
-                </button>
-              </div>
+              <label className="flex items-center justify-between p-4 bg-secondary rounded-xl">
+                <span className="font-medium text-foreground">Cash Payments</span>
+                <input
+                  type="checkbox"
+                  checked={paymentSettings.cashEnabled}
+                  onChange={(e) => setPaymentSettings({ ...paymentSettings, cashEnabled: e.target.checked })}
+                  className="w-5 h-5 rounded accent-primary"
+                />
+              </label>
+              <label className="flex items-center justify-between p-4 bg-secondary rounded-xl">
+                <span className="font-medium text-foreground">Card Payments</span>
+                <input
+                  type="checkbox"
+                  checked={paymentSettings.cardEnabled}
+                  onChange={(e) => setPaymentSettings({ ...paymentSettings, cardEnabled: e.target.checked })}
+                  className="w-5 h-5 rounded accent-primary"
+                />
+              </label>
+              <label className="flex items-center justify-between p-4 bg-secondary rounded-xl">
+                <span className="font-medium text-foreground">QRIS Payments</span>
+                <input
+                  type="checkbox"
+                  checked={paymentSettings.qrisEnabled}
+                  onChange={(e) => setPaymentSettings({ ...paymentSettings, qrisEnabled: e.target.checked })}
+                  className="w-5 h-5 rounded accent-primary"
+                />
+              </label>
             </div>
 
             {paymentSettings.qrisEnabled && (
-              <div className="space-y-3 pt-2">
+              <div className="space-y-3">
                 <div>
-                  <label className="text-sm text-muted-foreground mb-1 block">Merchant Name</label>
+                  <label className="text-sm text-muted-foreground mb-1.5 block">QRIS Name</label>
                   <input
                     type="text"
                     value={paymentSettings.qrisName}
                     onChange={(e) => setPaymentSettings({ ...paymentSettings, qrisName: e.target.value })}
                     className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    placeholder="Merchant name"
                   />
                 </div>
-
                 <div>
-                  <label className="text-sm text-muted-foreground mb-1 block">Merchant ID</label>
+                  <label className="text-sm text-muted-foreground mb-1.5 block">Merchant ID</label>
                   <input
                     type="text"
                     value={paymentSettings.qrisMerchantId}
                     onChange={(e) => setPaymentSettings({ ...paymentSettings, qrisMerchantId: e.target.value })}
                     className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    placeholder="Merchant ID"
                   />
                 </div>
               </div>
@@ -713,7 +588,7 @@ const Profile: React.FC = () => {
 
             <button
               onClick={() => handleSaveSettings('Payment')}
-              className="w-full h-14 bg-foreground text-background font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
             >
               <Save className="w-5 h-5" />
               Save Settings
@@ -729,64 +604,50 @@ const Profile: React.FC = () => {
             <DrawerTitle className="text-xl font-bold text-center">Receipt Settings</DrawerTitle>
           </DrawerHeader>
 
-          <div className="px-4 pb-8 space-y-4 overflow-y-auto max-h-[70vh]">
+          <div className="px-4 pb-8 space-y-4">
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-secondary rounded-xl">
-                <span className="font-medium text-foreground">Show Store Logo</span>
-                <button
-                  onClick={() => setReceiptSettings({ ...receiptSettings, showLogo: !receiptSettings.showLogo })}
-                  className={`w-12 h-7 rounded-full transition-colors ${
-                    receiptSettings.showLogo ? 'bg-primary' : 'bg-muted'
-                  }`}
-                >
-                  <div className={`w-5 h-5 bg-background rounded-full transition-transform ${
-                    receiptSettings.showLogo ? 'translate-x-6' : 'translate-x-1'
-                  }`} />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-secondary rounded-xl">
+              <label className="flex items-center justify-between p-4 bg-secondary rounded-xl">
+                <span className="font-medium text-foreground">Show Logo</span>
+                <input
+                  type="checkbox"
+                  checked={receiptSettings.showLogo}
+                  onChange={(e) => setReceiptSettings({ ...receiptSettings, showLogo: e.target.checked })}
+                  className="w-5 h-5 rounded accent-primary"
+                />
+              </label>
+              <label className="flex items-center justify-between p-4 bg-secondary rounded-xl">
                 <span className="font-medium text-foreground">Show Address</span>
-                <button
-                  onClick={() => setReceiptSettings({ ...receiptSettings, showAddress: !receiptSettings.showAddress })}
-                  className={`w-12 h-7 rounded-full transition-colors ${
-                    receiptSettings.showAddress ? 'bg-primary' : 'bg-muted'
-                  }`}
-                >
-                  <div className={`w-5 h-5 bg-background rounded-full transition-transform ${
-                    receiptSettings.showAddress ? 'translate-x-6' : 'translate-x-1'
-                  }`} />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-secondary rounded-xl">
-                <span className="font-medium text-foreground">Show Phone Number</span>
-                <button
-                  onClick={() => setReceiptSettings({ ...receiptSettings, showPhone: !receiptSettings.showPhone })}
-                  className={`w-12 h-7 rounded-full transition-colors ${
-                    receiptSettings.showPhone ? 'bg-primary' : 'bg-muted'
-                  }`}
-                >
-                  <div className={`w-5 h-5 bg-background rounded-full transition-transform ${
-                    receiptSettings.showPhone ? 'translate-x-6' : 'translate-x-1'
-                  }`} />
-                </button>
-              </div>
+                <input
+                  type="checkbox"
+                  checked={receiptSettings.showAddress}
+                  onChange={(e) => setReceiptSettings({ ...receiptSettings, showAddress: e.target.checked })}
+                  className="w-5 h-5 rounded accent-primary"
+                />
+              </label>
+              <label className="flex items-center justify-between p-4 bg-secondary rounded-xl">
+                <span className="font-medium text-foreground">Show Phone</span>
+                <input
+                  type="checkbox"
+                  checked={receiptSettings.showPhone}
+                  onChange={(e) => setReceiptSettings({ ...receiptSettings, showPhone: e.target.checked })}
+                  className="w-5 h-5 rounded accent-primary"
+                />
+              </label>
             </div>
 
             <div>
-              <label className="text-sm text-muted-foreground mb-1 block">Footer Text</label>
-              <textarea
+              <label className="text-sm text-muted-foreground mb-1.5 block">Footer Text</label>
+              <input
+                type="text"
                 value={receiptSettings.footerText}
                 onChange={(e) => setReceiptSettings({ ...receiptSettings, footerText: e.target.value })}
-                className="w-full h-20 px-4 py-3 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
-                placeholder="Thank you message..."
+                className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
               />
             </div>
 
             <button
               onClick={() => handleSaveSettings('Receipt')}
-              className="w-full h-14 bg-foreground text-background font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
             >
               <Save className="w-5 h-5" />
               Save Settings
@@ -802,14 +663,16 @@ const Profile: React.FC = () => {
             <DrawerTitle className="text-xl font-bold text-center">Transaction History</DrawerTitle>
           </DrawerHeader>
 
-          <div className="px-4 pb-8 space-y-4 overflow-y-auto max-h-[75vh]">
+          <div className="px-4 pb-8 space-y-4 overflow-y-auto max-h-[70vh]">
             {/* Free Plan Notice */}
             {currentPlan === 'free' && (
               <div className="bg-warning/10 border border-warning/20 rounded-2xl p-4 flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-warning mt-0.5" />
+                <AlertCircle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-foreground">Free Plan Limitation</p>
-                  <p className="text-xs text-muted-foreground">You can only view transactions from the last 7 days.</p>
+                  <p className="font-medium text-foreground text-sm">Free Plan Limitation</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    You can only view transactions from the last 7 days. Upgrade to see full history.
+                  </p>
                   <button
                     onClick={() => {
                       setShowTransactionHistory(false);
@@ -818,101 +681,58 @@ const Profile: React.FC = () => {
                     className="mt-2 text-xs text-primary font-medium flex items-center gap-1"
                   >
                     <Crown className="w-3 h-3" />
-                    Upgrade to see more
+                    Upgrade Now
                   </button>
                 </div>
               </div>
             )}
 
             {/* Date Picker */}
-            <div className="flex justify-center">
+            <div className="bg-card rounded-2xl p-4">
               <CalendarComponent
                 mode="single"
                 selected={selectedDate}
                 onSelect={(date) => date && setSelectedDate(date)}
-                disabled={(date) => date > new Date() || isDateDisabledForFree(date)}
-                className="rounded-xl border border-border pointer-events-auto"
+                disabled={(date) => 
+                  date > new Date() || 
+                  isDateDisabledForFree(date)
+                }
+                className="rounded-xl"
               />
             </div>
 
-            {/* Selected Date */}
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">Showing transactions for</p>
-              <p className="font-semibold text-foreground">{format(selectedDate, 'EEEE, MMMM d, yyyy')}</p>
-            </div>
-
-            {/* Transactions List */}
-            <div className="bg-card rounded-2xl p-4">
-              {filteredHistoryTransactions.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">No transactions on this date</p>
-              ) : (
-                <div className="space-y-3">
-                  {filteredHistoryTransactions.map(transaction => (
-                    <div key={transaction.id} className="flex items-center justify-between py-3 border-b border-border last:border-0">
-                      <div>
-                        <p className="font-medium text-foreground">
-                          {transaction.items.length} {transaction.items.length === 1 ? 'item' : 'items'}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(transaction.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          {' • '}
-                          <span className="capitalize">{transaction.paymentMethod}</span>
-                        </p>
-                      </div>
-                      <span className="font-semibold text-primary">${transaction.total.toFixed(2)}</span>
+            {/* Transactions for Selected Date */}
+            <div className="space-y-2">
+              <h4 className="font-semibold text-foreground">
+                {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+              </h4>
+              {filteredHistoryTransactions.length > 0 ? (
+                filteredHistoryTransactions.map(t => (
+                  <div key={t.id} className="bg-card rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-muted-foreground">
+                        {new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                      <span className="text-xs bg-secondary px-2 py-1 rounded-lg capitalize">
+                        {t.paymentMethod}
+                      </span>
                     </div>
-                  ))}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-foreground">
+                        {t.items.length} items
+                      </span>
+                      <span className="font-bold text-primary">${t.total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="bg-card rounded-xl p-8 text-center">
+                  <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-muted-foreground">No transactions on this date</p>
                 </div>
               )}
             </div>
           </div>
-        </DrawerContent>
-      </Drawer>
-
-      {/* Change Password Drawer */}
-      <Drawer open={showChangePassword} onOpenChange={setShowChangePassword}>
-        <DrawerContent className="max-h-[85vh] rounded-t-3xl">
-          <DrawerHeader className="pb-2">
-            <DrawerTitle className="text-xl font-bold text-center">Change Password</DrawerTitle>
-          </DrawerHeader>
-
-          <form onSubmit={handleChangePassword} className="px-4 pb-8 space-y-4">
-            <div>
-              <label className="text-sm text-muted-foreground mb-2 block">New Password</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter new password"
-                  className="w-full h-14 pl-12 pr-4 bg-secondary border-0 rounded-2xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm text-muted-foreground mb-2 block">Confirm New Password</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm new password"
-                  className="w-full h-14 pl-12 pr-4 bg-secondary border-0 rounded-2xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isUpdating}
-              className="w-full h-14 bg-foreground text-background font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {isUpdating ? 'Updating...' : 'Update Password'}
-            </button>
-          </form>
         </DrawerContent>
       </Drawer>
 
