@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { CreditCard, Banknote, Smartphone, CheckCircle, Printer } from 'lucide-react';
+import { CreditCard, Banknote, Smartphone, CheckCircle, Printer, QrCode } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { FeatureGate } from '@/components/FeatureGate';
+import { QRISPaymentModal } from '@/components/QRISPaymentModal';
 import { usePOS } from '@/context/POSContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useToast } from '@/hooks/use-toast';
@@ -10,13 +11,15 @@ import { useToast } from '@/hooks/use-toast';
 const paymentMethods = [
   { id: 'cash', label: 'Cash', icon: Banknote, description: 'Pay with cash' },
   { id: 'card', label: 'Card', icon: CreditCard, description: 'Credit or debit card' },
-  { id: 'digital', label: 'Digital', icon: Smartphone, description: 'E-wallet payment' },
+  { id: 'qris', label: 'QRIS', icon: QrCode, description: 'Scan QR to pay' },
+  { id: 'digital', label: 'E-Wallet', icon: Smartphone, description: 'GoPay, OVO, Dana' },
 ];
 
 const Checkout: React.FC = () => {
   const [selectedMethod, setSelectedMethod] = useState('cash');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [showQRIS, setShowQRIS] = useState(false);
   const { cart, cartTotal, customer, addTransaction } = usePOS();
   const { canMakeTransaction, incrementTransactionCount, hasFeature } = useSubscription();
   const navigate = useNavigate();
@@ -25,6 +28,7 @@ const Checkout: React.FC = () => {
   const discount = cartTotal * 0.1;
   const tax = 0;
   const total = cartTotal - discount + tax;
+  const totalInRupiah = total * 15500; // Convert to IDR for QRIS display
 
   const handlePayment = () => {
     if (!canMakeTransaction()) {
@@ -36,6 +40,16 @@ const Checkout: React.FC = () => {
       return;
     }
 
+    // If QRIS is selected, show QRIS modal
+    if (selectedMethod === 'qris') {
+      setShowQRIS(true);
+      return;
+    }
+
+    processPayment();
+  };
+
+  const processPayment = () => {
     setIsProcessing(true);
 
     setTimeout(() => {
@@ -58,6 +72,27 @@ const Checkout: React.FC = () => {
         description: `Transaction completed: $${total.toFixed(2)}`,
       });
     }, 1500);
+  };
+
+  const handleQRISPaymentComplete = () => {
+    setShowQRIS(false);
+    addTransaction({
+      items: cart,
+      customer: customer || undefined,
+      subtotal: cartTotal,
+      discount,
+      tax,
+      total,
+      paymentMethod: 'qris',
+    });
+
+    incrementTransactionCount();
+    setIsComplete(true);
+
+    toast({
+      title: 'QRIS Payment successful!',
+      description: `Transaction completed: Rp ${totalInRupiah.toLocaleString('id-ID')}`,
+    });
   };
 
   const handlePrintReceipt = () => {
@@ -89,6 +124,9 @@ const Checkout: React.FC = () => {
           <div className="bg-card rounded-2xl p-6 w-full">
             <p className="text-sm text-muted-foreground">Amount Paid</p>
             <p className="text-3xl font-bold text-foreground">${total.toFixed(2)}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              ≈ Rp {totalInRupiah.toLocaleString('id-ID')}
+            </p>
             <p className="text-sm text-muted-foreground mt-2 capitalize">{selectedMethod} payment</p>
           </div>
 
@@ -134,7 +172,10 @@ const Checkout: React.FC = () => {
           </div>
           <div className="border-t border-border mt-3 pt-3 flex justify-between items-center">
             <span className="font-semibold text-foreground">Total</span>
-            <span className="text-xl font-bold text-primary">${total.toFixed(2)}</span>
+            <div className="text-right">
+              <span className="text-xl font-bold text-primary">${total.toFixed(2)}</span>
+              <p className="text-xs text-muted-foreground">≈ Rp {totalInRupiah.toLocaleString('id-ID')}</p>
+            </div>
           </div>
         </div>
 
@@ -177,9 +218,17 @@ const Checkout: React.FC = () => {
           disabled={isProcessing || !canMakeTransaction()}
           className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 btn-primary-glow"
         >
-          {isProcessing ? 'Processing...' : `Pay $${total.toFixed(2)}`}
+          {isProcessing ? 'Processing...' : selectedMethod === 'qris' ? 'Show QR Code' : `Pay $${total.toFixed(2)}`}
         </button>
       </main>
+
+      {/* QRIS Payment Modal */}
+      <QRISPaymentModal
+        open={showQRIS}
+        onOpenChange={setShowQRIS}
+        amount={totalInRupiah}
+        onPaymentComplete={handleQRISPaymentComplete}
+      />
     </div>
   );
 };
