@@ -32,7 +32,7 @@ const Checkout: React.FC = () => {
     paymentMethod: string;
   } | null>(null);
   
-  const { cart, cartTotal, customer, addTransaction } = usePOS();
+  const { cart, cartTotal, customer, addTransaction, currentShift } = usePOS();
   const { canMakeTransaction, incrementTransactionCount, hasFeature } = useSubscription();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -41,6 +41,19 @@ const Checkout: React.FC = () => {
   const tax = 0;
   const total = cartTotal - discount + tax;
   const totalInRupiah = total * 15500;
+  const isShiftClosed = currentShift && !currentShift.isOpen;
+
+  // Redirect to reports if shift is closed
+  React.useEffect(() => {
+    if (isShiftClosed) {
+      toast({
+        title: 'Shift is closed',
+        description: 'You cannot make transactions. Redirecting to reports.',
+        variant: 'destructive',
+      });
+      navigate('/reports');
+    }
+  }, [isShiftClosed, navigate, toast]);
 
   const handlePayment = () => {
     if (!canMakeTransaction()) {
