@@ -1,35 +1,92 @@
-import React from 'react';
-import { Calendar, DollarSign, ShoppingBag, TrendingUp, Clock, CreditCard, Download, Crown } from 'lucide-react';
+import React, { useState } from 'react';
+import { Calendar, DollarSign, ShoppingBag, TrendingUp, Clock, CreditCard, Download, Crown, CalendarDays, CalendarRange } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { format, startOfMonth, endOfMonth, subDays, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
 import { PageHeader } from '@/components/PageHeader';
 import { GlassNavigation } from '@/components/GlassNavigation';
 import { FeatureGate, PlanBadge } from '@/components/FeatureGate';
 import { usePOS } from '@/context/POSContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
+
+type ReportPeriod = 'daily' | 'weekly' | 'monthly' | 'custom';
 
 const Reports: React.FC = () => {
   const { currentShift, transactions } = usePOS();
-  const { hasFeature, features } = useSubscription();
+  const { hasFeature, features, currentPlan } = useSubscription();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  const [period, setPeriod] = useState<ReportPeriod>('daily');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [customStartDate, setCustomStartDate] = useState<Date | undefined>(subDays(new Date(), 7));
+  const [customEndDate, setCustomEndDate] = useState<Date | undefined>(new Date());
 
-  const todayTransactions = transactions.filter(t => {
-    const today = new Date();
-    const transactionDate = new Date(t.timestamp);
-    return transactionDate.toDateString() === today.toDateString();
-  });
+  const getFilteredTransactions = () => {
+    const now = new Date();
+    const today = startOfDay(now);
+    
+    return transactions.filter(t => {
+      const transactionDate = new Date(t.timestamp);
+      
+      switch (period) {
+        case 'daily':
+          return transactionDate >= today;
+        case 'weekly':
+          return transactionDate >= subDays(today, 7);
+        case 'monthly':
+          return isWithinInterval(transactionDate, {
+            start: startOfMonth(now),
+            end: endOfMonth(now),
+          });
+        case 'custom':
+          if (customStartDate && customEndDate) {
+            return isWithinInterval(transactionDate, {
+              start: startOfDay(customStartDate),
+              end: endOfDay(customEndDate),
+            });
+          }
+          return true;
+        default:
+          return true;
+      }
+    });
+  };
 
-  const totalSales = todayTransactions.reduce((sum, t) => sum + t.total, 0);
-  const totalItems = todayTransactions.reduce((sum, t) => 
+  const filteredTransactions = getFilteredTransactions();
+  const totalSales = filteredTransactions.reduce((sum, t) => sum + t.total, 0);
+  const totalItems = filteredTransactions.reduce((sum, t) => 
     sum + t.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0
   );
-  const avgTransaction = todayTransactions.length > 0 ? totalSales / todayTransactions.length : 0;
+  const avgTransaction = filteredTransactions.length > 0 ? totalSales / filteredTransactions.length : 0;
 
   const paymentBreakdown = {
-    cash: todayTransactions.filter(t => t.paymentMethod === 'cash').reduce((sum, t) => sum + t.total, 0),
-    card: todayTransactions.filter(t => t.paymentMethod === 'card').reduce((sum, t) => sum + t.total, 0),
-    digital: todayTransactions.filter(t => t.paymentMethod === 'digital').reduce((sum, t) => sum + t.total, 0),
+    cash: filteredTransactions.filter(t => t.paymentMethod === 'cash').reduce((sum, t) => sum + t.total, 0),
+    card: filteredTransactions.filter(t => t.paymentMethod === 'card').reduce((sum, t) => sum + t.total, 0),
+    digital: filteredTransactions.filter(t => ['digital', 'qris'].includes(t.paymentMethod)).reduce((sum, t) => sum + t.total, 0),
+  };
+
+  const getPeriodLabel = () => {
+    switch (period) {
+      case 'daily':
+        return format(new Date(), 'EEE, MMM d');
+      case 'weekly':
+        return `${format(subDays(new Date(), 7), 'MMM d')} - ${format(new Date(), 'MMM d')}`;
+      case 'monthly':
+        return format(new Date(), 'MMMM yyyy');
+      case 'custom':
+        if (customStartDate && customEndDate) {
+          return `${format(customStartDate, 'MMM d')} - ${format(customEndDate, 'MMM d')}`;
+        }
+        return 'Custom Range';
+    }
   };
 
   const handleExportReport = () => {
@@ -43,9 +100,35 @@ const Reports: React.FC = () => {
     }
     toast({
       title: 'Report exported!',
-      description: 'Daily report has been downloaded.',
+      description: `${period.charAt(0).toUpperCase() + period.slice(1)} report has been downloaded.`,
     });
   };
+
+  const handlePeriodChange = (newPeriod: ReportPeriod) => {
+    if (newPeriod !== 'daily' && currentPlan === 'free') {
+      toast({
+        title: 'Feature locked',
+        description: 'Upgrade to Basic or higher for advanced reports.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (newPeriod === 'custom') {
+      setShowDatePicker(true);
+    } else {
+      setPeriod(newPeriod);
+    }
+  };
+
+  const handleDateRangeConfirm = () => {
+    if (customStartDate && customEndDate) {
+      setPeriod('custom');
+      setShowDatePicker(false);
+    }
+  };
+
+  const canAccessAdvancedReports = currentPlan !== 'free';
 
   return (
     <div className="page-container bg-background">
@@ -62,17 +145,68 @@ const Reports: React.FC = () => {
       />
 
       <main className="px-4 space-y-4 pb-4">
+        {/* Period Selector */}
+        <div className="flex gap-2 overflow-x-auto pb-2">
+          <button
+            onClick={() => handlePeriodChange('daily')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+              period === 'daily' 
+                ? 'bg-foreground text-background' 
+                : 'bg-secondary text-foreground'
+            }`}
+          >
+            <CalendarDays className="w-4 h-4" />
+            Daily
+          </button>
+          <button
+            onClick={() => handlePeriodChange('weekly')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+              period === 'weekly' 
+                ? 'bg-foreground text-background' 
+                : canAccessAdvancedReports 
+                  ? 'bg-secondary text-foreground' 
+                  : 'bg-muted text-muted-foreground'
+            }`}
+          >
+            <Calendar className="w-4 h-4" />
+            Weekly
+            {!canAccessAdvancedReports && <Crown className="w-3 h-3" />}
+          </button>
+          <button
+            onClick={() => handlePeriodChange('monthly')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+              period === 'monthly' 
+                ? 'bg-foreground text-background' 
+                : canAccessAdvancedReports 
+                  ? 'bg-secondary text-foreground' 
+                  : 'bg-muted text-muted-foreground'
+            }`}
+          >
+            <CalendarDays className="w-4 h-4" />
+            Monthly
+            {!canAccessAdvancedReports && <Crown className="w-3 h-3" />}
+          </button>
+          <button
+            onClick={() => handlePeriodChange('custom')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+              period === 'custom' 
+                ? 'bg-foreground text-background' 
+                : canAccessAdvancedReports 
+                  ? 'bg-secondary text-foreground' 
+                  : 'bg-muted text-muted-foreground'
+            }`}
+          >
+            <CalendarRange className="w-4 h-4" />
+            Custom
+            {!canAccessAdvancedReports && <Crown className="w-3 h-3" />}
+          </button>
+        </div>
+
         {/* Date Header with Plan Badge */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Calendar className="w-4 h-4" />
-            <span className="text-sm font-medium">
-              {new Date().toLocaleDateString('en-US', { 
-                weekday: 'short', 
-                month: 'short', 
-                day: 'numeric' 
-              })}
-            </span>
+            <span className="text-sm font-medium">{getPeriodLabel()}</span>
           </div>
           <PlanBadge />
         </div>
@@ -130,7 +264,7 @@ const Reports: React.FC = () => {
               <ShoppingBag className="w-5 h-5 text-success" />
             </div>
             <p className="text-sm text-muted-foreground">Transactions</p>
-            <p className="text-2xl font-bold text-foreground">{todayTransactions.length}</p>
+            <p className="text-2xl font-bold text-foreground">{filteredTransactions.length}</p>
           </div>
 
           <div className="bg-card rounded-2xl p-4">
@@ -185,7 +319,7 @@ const Reports: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="text-lg">📱</span>
-                <span className="text-foreground">Digital</span>
+                <span className="text-foreground">Digital/QRIS</span>
               </div>
               <span className="font-semibold text-foreground">${paymentBreakdown.digital.toFixed(2)}</span>
             </div>
@@ -195,11 +329,11 @@ const Reports: React.FC = () => {
         {/* Recent Transactions */}
         <div className="bg-card rounded-2xl p-4">
           <h3 className="font-semibold text-foreground mb-4">Recent Transactions</h3>
-          {todayTransactions.length === 0 ? (
+          {filteredTransactions.length === 0 ? (
             <p className="text-center text-muted-foreground py-4">No transactions yet</p>
           ) : (
             <div className="space-y-3">
-              {todayTransactions.slice(-5).reverse().map(transaction => (
+              {filteredTransactions.slice(-5).reverse().map(transaction => (
                 <div key={transaction.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                   <div>
                     <p className="font-medium text-foreground">
@@ -218,6 +352,50 @@ const Reports: React.FC = () => {
           )}
         </div>
       </main>
+
+      {/* Date Range Picker Drawer */}
+      <Drawer open={showDatePicker} onOpenChange={setShowDatePicker}>
+        <DrawerContent className="max-h-[85vh]">
+          <DrawerHeader className="border-b border-border pb-4">
+            <DrawerTitle className="text-center">Select Date Range</DrawerTitle>
+          </DrawerHeader>
+          
+          <div className="p-4 space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Start Date</label>
+              <div className="flex justify-center">
+                <CalendarComponent
+                  mode="single"
+                  selected={customStartDate}
+                  onSelect={setCustomStartDate}
+                  className="rounded-xl border border-border"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">End Date</label>
+              <div className="flex justify-center">
+                <CalendarComponent
+                  mode="single"
+                  selected={customEndDate}
+                  onSelect={setCustomEndDate}
+                  disabled={(date) => customStartDate ? date < customStartDate : false}
+                  className="rounded-xl border border-border"
+                />
+              </div>
+            </div>
+            
+            <button
+              onClick={handleDateRangeConfirm}
+              disabled={!customStartDate || !customEndDate}
+              className="w-full h-12 bg-primary text-primary-foreground font-medium rounded-2xl hover:opacity-90 transition-all disabled:opacity-50"
+            >
+              Apply Range
+            </button>
+          </div>
+        </DrawerContent>
+      </Drawer>
 
       <GlassNavigation />
     </div>

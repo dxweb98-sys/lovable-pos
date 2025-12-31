@@ -14,7 +14,111 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          store_name: string | null
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          store_name?: string | null
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          store_name?: string | null
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          monthly_transaction_count: number
+          payment_reference: string | null
+          plan: string
+          started_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          monthly_transaction_count?: number
+          payment_reference?: string | null
+          plan?: string
+          started_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          monthly_transaction_count?: number
+          payment_reference?: string | null
+          plan?: string
+          started_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          created_at: string
+          customer: Json | null
+          discount: number | null
+          id: string
+          items: Json
+          payment_method: string
+          subtotal: number
+          tax: number | null
+          total: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          customer?: Json | null
+          discount?: number | null
+          id?: string
+          items: Json
+          payment_method: string
+          subtotal: number
+          tax?: number | null
+          total: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          customer?: Json | null
+          discount?: number | null
+          id?: string
+          items?: Json
+          payment_method?: string
+          subtotal?: number
+          tax?: number | null
+          total?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

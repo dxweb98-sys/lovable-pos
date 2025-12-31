@@ -5,7 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { POSProvider, usePOS } from "@/context/POSContext";
 import { SubscriptionProvider } from "@/context/SubscriptionContext";
-import Login from "./pages/Login";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
+import Auth from "./pages/Auth";
 import ShiftManagement from "./pages/ShiftManagement";
 import POS from "./pages/POS";
 import Cart from "./pages/Cart";
@@ -18,11 +19,19 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-// Protected Route Component
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isLoggedIn } = usePOS();
+// Auth Protected Route Component
+const AuthProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, isLoading } = useAuth();
   
-  if (!isLoggedIn) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+  
+  if (!user) {
     return <Navigate to="/" replace />;
   }
   
@@ -31,9 +40,18 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 // Shift Required Route Component
 const ShiftRequiredRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isLoggedIn, currentShift } = usePOS();
+  const { user, isLoading } = useAuth();
+  const { currentShift } = usePOS();
   
-  if (!isLoggedIn) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+  
+  if (!user) {
     return <Navigate to="/" replace />;
   }
   
@@ -44,16 +62,39 @@ const ShiftRequiredRoute: React.FC<{ children: React.ReactNode }> = ({ children 
   return <>{children}</>;
 };
 
+// Auth Page Route - Redirect if already logged in
+const AuthRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+  
+  if (user) {
+    return <Navigate to="/shift" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
 const AppRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<Login />} />
+      <Route path="/" element={
+        <AuthRoute>
+          <Auth />
+        </AuthRoute>
+      } />
       <Route 
         path="/shift" 
         element={
-          <ProtectedRoute>
+          <AuthProtectedRoute>
             <ShiftManagement />
-          </ProtectedRoute>
+          </AuthProtectedRoute>
         } 
       />
       <Route 
@@ -99,17 +140,17 @@ const AppRoutes = () => {
       <Route 
         path="/subscription" 
         element={
-          <ProtectedRoute>
+          <AuthProtectedRoute>
             <Subscription />
-          </ProtectedRoute>
+          </AuthProtectedRoute>
         } 
       />
       <Route 
         path="/settings" 
         element={
-          <ProtectedRoute>
+          <AuthProtectedRoute>
             <Settings />
-          </ProtectedRoute>
+          </AuthProtectedRoute>
         } 
       />
       <Route path="*" element={<NotFound />} />
@@ -120,15 +161,17 @@ const AppRoutes = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <SubscriptionProvider>
-        <POSProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
-        </POSProvider>
-      </SubscriptionProvider>
+      <AuthProvider>
+        <SubscriptionProvider>
+          <POSProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+          </POSProvider>
+        </SubscriptionProvider>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

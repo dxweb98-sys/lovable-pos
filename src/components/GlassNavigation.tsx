@@ -79,9 +79,6 @@ export const GlassNavigation: React.FC = () => {
                   </span>
                 )}
               </button>
-              <span className={`block text-[10px] font-medium text-center mt-1 ${isCartDisabled ? 'text-muted-foreground/30' : 'text-foreground'}`}>
-                Cart
-              </span>
             </div>
 
             {/* Right nav items */}
