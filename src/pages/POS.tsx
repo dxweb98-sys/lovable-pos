@@ -81,7 +81,7 @@ const POS: React.FC = () => {
         </div>
 
         {/* Categories */}
-        <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
           {categories.map(category => (
             <CategoryPill
               key={category.id}

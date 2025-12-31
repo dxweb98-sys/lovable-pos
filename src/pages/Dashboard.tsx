@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, Package, Tag, Edit2, Trash2, TrendingUp, Clock, Receipt, ChevronRight, X } from 'lucide-react';
+import { Plus, Package, Tag, Edit2, Trash2, TrendingUp, Clock, Receipt, ChevronRight } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { GlassNavigation } from '@/components/GlassNavigation';
 import { usePOS } from '@/context/POSContext';
@@ -51,15 +51,24 @@ const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'categories'>('overview');
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [categories, setCategories] = useState<Category[]>(initialCategories);
+  
+  // Drawer states
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [showEditProduct, setShowEditProduct] = useState(false);
   const [showAddCategory, setShowAddCategory] = useState(false);
+  const [showEditCategory, setShowEditCategory] = useState(false);
   const [showTransactionDetail, setShowTransactionDetail] = useState(false);
+  
+  // Form states
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [newProduct, setNewProduct] = useState({ name: '', price: '', category: 'food', image: '' });
   const [newCategory, setNewCategory] = useState({ name: '' });
   
   const { transactions, currentShift } = usePOS();
 
+  // Product handlers
   const handleAddProduct = () => {
     if (newProduct.name && newProduct.price) {
       setProducts([...products, {
@@ -75,6 +84,24 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const handleEditProductClick = (product: Product) => {
+    setEditingProduct({ ...product });
+    setShowEditProduct(true);
+  };
+
+  const handleSaveProduct = () => {
+    if (editingProduct && editingProduct.name && editingProduct.price) {
+      setProducts(products.map(p => p.id === editingProduct.id ? editingProduct : p));
+      setEditingProduct(null);
+      setShowEditProduct(false);
+    }
+  };
+
+  const handleDeleteProduct = (id: string) => {
+    setProducts(products.filter(p => p.id !== id));
+  };
+
+  // Category handlers
   const handleAddCategory = () => {
     if (newCategory.name) {
       setCategories([...categories, {
@@ -86,8 +113,17 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const handleDeleteProduct = (id: string) => {
-    setProducts(products.filter(p => p.id !== id));
+  const handleEditCategoryClick = (category: Category) => {
+    setEditingCategory({ ...category });
+    setShowEditCategory(true);
+  };
+
+  const handleSaveCategory = () => {
+    if (editingCategory && editingCategory.name) {
+      setCategories(categories.map(c => c.id === editingCategory.id ? editingCategory : c));
+      setEditingCategory(null);
+      setShowEditCategory(false);
+    }
   };
 
   const handleDeleteCategory = (id: string) => {
@@ -285,7 +321,10 @@ const Dashboard: React.FC = () => {
                     <p className="text-xs text-muted-foreground">${product.price.toFixed(2)} • {product.category}</p>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <button className="w-8 h-8 rounded-full bg-background flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-95 transition-all">
+                    <button 
+                      onClick={() => handleEditProductClick(product)}
+                      className="w-8 h-8 rounded-full bg-background flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-95 transition-all"
+                    >
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button 
@@ -322,7 +361,10 @@ const Dashboard: React.FC = () => {
                     <p className="font-semibold text-foreground">{category.name}</p>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <button className="w-8 h-8 rounded-full bg-background flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-95 transition-all">
+                    <button 
+                      onClick={() => handleEditCategoryClick(category)}
+                      className="w-8 h-8 rounded-full bg-background flex items-center justify-center text-muted-foreground hover:text-foreground active:scale-95 transition-all"
+                    >
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button 
@@ -400,6 +442,69 @@ const Dashboard: React.FC = () => {
         </DrawerContent>
       </Drawer>
 
+      {/* Edit Product Drawer */}
+      <Drawer open={showEditProduct} onOpenChange={setShowEditProduct}>
+        <DrawerContent className="max-h-[85vh] rounded-t-3xl">
+          <DrawerHeader className="pb-2">
+            <DrawerTitle className="text-xl font-bold text-center">Edit Product</DrawerTitle>
+          </DrawerHeader>
+          {editingProduct && (
+            <div className="px-4 pb-8 space-y-4">
+              <div>
+                <label className="text-sm text-muted-foreground mb-1.5 block">Product Name</label>
+                <input
+                  type="text"
+                  value={editingProduct.name}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
+                  placeholder="Enter product name"
+                  className="w-full h-12 px-4 bg-secondary/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-muted-foreground mb-1.5 block">Price</label>
+                <input
+                  type="number"
+                  value={editingProduct.price}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) || 0 })}
+                  placeholder="0.00"
+                  step="0.01"
+                  className="w-full h-12 px-4 bg-secondary/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="text-sm text-muted-foreground mb-1.5 block">Category</label>
+                <select
+                  value={editingProduct.category}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
+                  className="w-full h-12 px-4 bg-secondary/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                >
+                  {categories.map(cat => (
+                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm text-muted-foreground mb-1.5 block">Image URL</label>
+                <input
+                  type="text"
+                  value={editingProduct.image}
+                  onChange={(e) => setEditingProduct({ ...editingProduct, image: e.target.value })}
+                  placeholder="https://..."
+                  className="w-full h-12 px-4 bg-secondary/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                />
+              </div>
+              <button
+                onClick={handleSaveProduct}
+                disabled={!editingProduct.name || !editingProduct.price}
+                className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 btn-primary-glow"
+              >
+                Save Changes
+              </button>
+            </div>
+          )}
+        </DrawerContent>
+      </Drawer>
+
       {/* Add Category Drawer */}
       <Drawer open={showAddCategory} onOpenChange={setShowAddCategory}>
         <DrawerContent className="rounded-t-3xl">
@@ -428,6 +533,36 @@ const Dashboard: React.FC = () => {
         </DrawerContent>
       </Drawer>
 
+      {/* Edit Category Drawer */}
+      <Drawer open={showEditCategory} onOpenChange={setShowEditCategory}>
+        <DrawerContent className="rounded-t-3xl">
+          <DrawerHeader className="pb-2">
+            <DrawerTitle className="text-xl font-bold text-center">Edit Category</DrawerTitle>
+          </DrawerHeader>
+          {editingCategory && (
+            <div className="px-4 pb-8 space-y-4">
+              <div>
+                <label className="text-sm text-muted-foreground mb-1.5 block">Category Name</label>
+                <input
+                  type="text"
+                  value={editingCategory.name}
+                  onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
+                  placeholder="Enter category name"
+                  className="w-full h-12 px-4 bg-secondary/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                />
+              </div>
+              <button
+                onClick={handleSaveCategory}
+                disabled={!editingCategory.name}
+                className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 btn-primary-glow"
+              >
+                Save Changes
+              </button>
+            </div>
+          )}
+        </DrawerContent>
+      </Drawer>
+
       {/* Transaction Detail Drawer */}
       <Drawer open={showTransactionDetail} onOpenChange={setShowTransactionDetail}>
         <DrawerContent className="max-h-[85vh] rounded-t-3xl">
@@ -436,7 +571,6 @@ const Dashboard: React.FC = () => {
           </DrawerHeader>
           {selectedTransaction && (
             <div className="px-4 pb-8 space-y-4">
-              {/* Transaction Info */}
               <div className="bg-success/10 rounded-2xl p-4 text-center">
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Amount</p>
                 <p className="text-3xl font-bold text-success mt-1">${selectedTransaction.total.toFixed(2)}</p>
@@ -445,7 +579,6 @@ const Dashboard: React.FC = () => {
                 </p>
               </div>
 
-              {/* Items */}
               <div className="bg-secondary/30 rounded-2xl p-4">
                 <h4 className="font-semibold text-foreground mb-3">Items ({selectedTransaction.items.length})</h4>
                 <div className="space-y-2">
@@ -464,7 +597,6 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
 
-              {/* Summary */}
               <div className="bg-secondary/30 rounded-2xl p-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
