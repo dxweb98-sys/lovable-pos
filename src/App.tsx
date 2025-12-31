@@ -15,6 +15,7 @@ import Dashboard from "./pages/Dashboard";
 import Reports from "./pages/Reports";
 import Subscription from "./pages/Subscription";
 import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -148,9 +149,17 @@ const AppRoutes = () => {
       <Route 
         path="/settings" 
         element={
-          <AuthProtectedRoute>
+          <ShiftRequiredRoute>
             <Settings />
-          </AuthProtectedRoute>
+          </ShiftRequiredRoute>
+        } 
+      />
+      <Route 
+        path="/profile" 
+        element={
+          <ShiftRequiredRoute>
+            <Profile />
+          </ShiftRequiredRoute>
         } 
       />
       <Route path="*" element={<NotFound />} />

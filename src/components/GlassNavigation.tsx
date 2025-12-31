@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, ShoppingBag, LayoutDashboard, BarChart3, Settings } from 'lucide-react';
+import { Home, ShoppingBag, LayoutDashboard, BarChart3, User } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { usePOS } from '@/context/POSContext';
 import { CartDrawer } from '@/components/CartDrawer';
@@ -11,7 +11,7 @@ const leftNavItems = [
 
 const rightNavItems = [
   { icon: BarChart3, label: 'Reports', path: '/reports' },
-  { icon: Settings, label: 'Settings', path: '/settings' },
+  { icon: User, label: 'Profile', path: '/profile' },
 ];
 
 export const GlassNavigation: React.FC = () => {
