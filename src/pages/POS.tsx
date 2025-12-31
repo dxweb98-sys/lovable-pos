@@ -3,8 +3,6 @@ import { Search, Settings, Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ProductCard } from '@/components/ProductCard';
 import { CategoryPill } from '@/components/CategoryPill';
-import { FloatingCartButton } from '@/components/FloatingCartButton';
-import { CartDrawer } from '@/components/CartDrawer';
 import { GlassNavigation } from '@/components/GlassNavigation';
 import { TransactionLimitBanner, PlanBadge } from '@/components/FeatureGate';
 import { usePOS } from '@/context/POSContext';
@@ -32,7 +30,6 @@ const products = [
 const POS: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const { currentShift } = usePOS();
   const { canMakeTransaction } = useSubscription();
   const navigate = useNavigate();
@@ -118,7 +115,7 @@ const POS: React.FC = () => {
       )}
 
       {/* Products Grid */}
-      <main className="px-4 py-4 pb-32">
+      <main className="px-4 py-4 pb-36">
         <div className="grid grid-cols-2 gap-3">
           {filteredProducts.map(product => (
             <ProductCard
@@ -134,8 +131,6 @@ const POS: React.FC = () => {
         </div>
       </main>
 
-      <FloatingCartButton onClick={() => setIsCartOpen(true)} />
-      <CartDrawer open={isCartOpen} onOpenChange={setIsCartOpen} />
       <GlassNavigation />
     </div>
   );
