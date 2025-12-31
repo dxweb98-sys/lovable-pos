@@ -3,7 +3,8 @@ import { Search, Settings, Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ProductCard } from '@/components/ProductCard';
 import { CategoryPill } from '@/components/CategoryPill';
-import { FloatingCartBar } from '@/components/FloatingCartBar';
+import { FloatingCartButton } from '@/components/FloatingCartButton';
+import { CartModal } from '@/components/CartModal';
 import { GlassNavigation } from '@/components/GlassNavigation';
 import { TransactionLimitBanner, PlanBadge } from '@/components/FeatureGate';
 import { usePOS } from '@/context/POSContext';
@@ -31,6 +32,7 @@ const products = [
 const POS: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const { currentShift } = usePOS();
   const { canMakeTransaction } = useSubscription();
   const navigate = useNavigate();
@@ -60,7 +62,10 @@ const POS: React.FC = () => {
             >
               <Crown className="w-5 h-5 text-primary" />
             </button>
-            <button className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-muted transition-colors">
+            <button 
+              onClick={() => navigate('/settings')}
+              className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-muted transition-colors"
+            >
               <Settings className="w-5 h-5" />
             </button>
           </div>
@@ -130,7 +135,8 @@ const POS: React.FC = () => {
         </div>
       </main>
 
-      <FloatingCartBar />
+      <FloatingCartButton onClick={() => setIsCartOpen(true)} />
+      <CartModal open={isCartOpen} onOpenChange={setIsCartOpen} />
       <GlassNavigation />
     </div>
   );
