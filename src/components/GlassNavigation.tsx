@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, ShoppingBag, LayoutDashboard, BarChart3, User } from 'lucide-react';
+import { Home, ShoppingBag, LayoutDashboard, MinusCircle, User } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { usePOS } from '@/context/POSContext';
 import { CartDrawer } from '@/components/CartDrawer';
@@ -10,7 +10,7 @@ const leftNavItems = [
 ];
 
 const rightNavItems = [
-  { icon: BarChart3, label: 'Reports', path: '/reports' },
+  { icon: MinusCircle, label: 'Expenses', path: '/expenses' },
   { icon: User, label: 'Profile', path: '/profile' },
 ];
 
