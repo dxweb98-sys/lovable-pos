@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserPlus, X } from 'lucide-react';
+import { UserPlus, X, ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { CartItem } from '@/components/CartItem';
@@ -40,7 +40,7 @@ const Cart: React.FC = () => {
         <PageHeader title="Cart" showBack />
         <div className="flex flex-col items-center justify-center h-[60vh] px-6 text-center">
           <div className="w-24 h-24 bg-secondary rounded-full flex items-center justify-center mb-4">
-            <span className="text-4xl">🛒</span>
+            <ShoppingCart className="w-12 h-12 text-muted-foreground" />
           </div>
           <h2 className="text-xl font-semibold text-foreground mb-2">Your cart is empty</h2>
           <p className="text-muted-foreground mb-6">Add some items to get started</p>

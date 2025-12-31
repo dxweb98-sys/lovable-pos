@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, UserPlus, Minus, Plus, Trash2 } from 'lucide-react';
+import { X, UserPlus, Minus, Plus, Trash2, ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { usePOS } from '@/context/POSContext';
 import {
@@ -116,7 +116,7 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({ open, onOpenChange }) =>
           {cart.length === 0 ? (
             <div className="py-12 text-center">
               <div className="w-20 h-20 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-4xl">🛒</span>
+                <ShoppingCart className="w-10 h-10 text-muted-foreground" />
               </div>
               <p className="text-muted-foreground text-lg">Cart is empty</p>
               <p className="text-muted-foreground/60 text-sm mt-1">Add items from the menu</p>
