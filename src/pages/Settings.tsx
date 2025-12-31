@@ -38,7 +38,7 @@ const Settings: React.FC = () => {
     storeName: 'QuickPOS Store',
     storeAddress: 'Jl. Sudirman No. 123, Jakarta',
     storePhone: '+62 812 3456 7890',
-    storeLogo: '🏪',
+    storeLogo: '',
   });
 
   const [paymentSettings, setPaymentSettings] = useState<PaymentSettings>({
