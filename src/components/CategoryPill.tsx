@@ -2,28 +2,25 @@ import React from 'react';
 
 interface CategoryPillProps {
   label: string;
-  icon: string;
   isActive: boolean;
   onClick: () => void;
 }
 
 export const CategoryPill: React.FC<CategoryPillProps> = ({
   label,
-  icon,
   isActive,
   onClick,
 }) => {
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center gap-2 min-w-[72px] py-3 px-4 rounded-2xl transition-all duration-200 ${
+      className={`px-5 py-2.5 rounded-full transition-all duration-200 whitespace-nowrap ${
         isActive 
-          ? 'bg-foreground text-background shadow-soft' 
-          : 'bg-card text-card-foreground hover:bg-secondary'
+          ? 'bg-foreground text-background font-semibold shadow-soft' 
+          : 'bg-card text-muted-foreground hover:bg-secondary hover:text-foreground'
       }`}
     >
-      <span className="text-2xl">{icon}</span>
-      <span className="text-xs font-medium whitespace-nowrap">{label}</span>
+      <span className="text-sm">{label}</span>
     </button>
   );
 };
