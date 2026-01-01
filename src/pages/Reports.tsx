@@ -226,6 +226,7 @@ const Reports: React.FC = () => {
     <div className="page-container bg-background">
       <PageHeader 
         title="Reports" 
+        showBack={true}
         rightContent={
           <button
             onClick={() => navigate('/subscription')}
