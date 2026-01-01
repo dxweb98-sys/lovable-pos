@@ -234,19 +234,41 @@ const Reports: React.FC = () => {
       return;
     }
     
-    // Generate CSV content
-    const csvContent = [
+    // Generate CSV content with transactions and expenses
+    const transactionsCsv = [
+      '=== TRANSACTIONS ===',
       'ID,Date,Time,Items,Subtotal,Discount,Tax,Total,Payment Method,Customer',
       ...filteredTransactions.map(t => 
         `${t.id},${format(new Date(t.timestamp), 'yyyy-MM-dd')},${format(new Date(t.timestamp), 'HH:mm')},${t.items.length},${t.subtotal},${t.discount},${t.tax},${t.total},${t.paymentMethod},${t.customer?.name || 'Walk-in'}`
       )
-    ].join('\n');
+    ];
+    
+    const expensesCsv = [
+      '',
+      '=== EXPENSES ===',
+      'ID,Date,Time,Description,Amount',
+      ...filteredExpenses.map(e => 
+        `${e.id},${format(new Date(e.date), 'yyyy-MM-dd')},${format(new Date(e.date), 'HH:mm')},${e.description},${e.amount.toFixed(2)}`
+      )
+    ];
+    
+    const summaryCsv = [
+      '',
+      '=== SUMMARY ===',
+      `Total Sales,$${totalSales.toFixed(2)}`,
+      `Total Expenses,$${totalExpenses.toFixed(2)}`,
+      `Net Income,$${netIncome.toFixed(2)}`,
+      `Transactions,${filteredTransactions.length}`,
+      `Expense Items,${filteredExpenses.length}`
+    ];
+    
+    const csvContent = [...transactionsCsv, ...expensesCsv, ...summaryCsv].join('\n');
     
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `transactions-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.download = `report-${format(new Date(), 'yyyy-MM-dd')}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -254,7 +276,7 @@ const Reports: React.FC = () => {
     
     toast({
       title: 'Export successful!',
-      description: `${filteredTransactions.length} transactions exported.`,
+      description: `Report with ${filteredTransactions.length} transactions and ${filteredExpenses.length} expenses exported.`,
     });
   };
 
