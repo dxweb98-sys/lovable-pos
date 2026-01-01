@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Crown } from 'lucide-react';
+import { Search, Crown, BarChart3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ProductCard } from '@/components/ProductCard';
 import { CategoryPill } from '@/components/CategoryPill';
@@ -49,12 +49,20 @@ const POS: React.FC = () => {
             <span className="text-xl font-bold text-foreground">QuickPOS</span>
             <PlanBadge />
           </div>
-          <button 
-            onClick={() => navigate('/subscription')}
-            className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all"
-          >
-            <Crown className="w-5 h-5 text-primary" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => navigate('/reports')}
+              className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-muted active:scale-95 transition-all"
+            >
+              <BarChart3 className="w-5 h-5 text-foreground" />
+            </button>
+            <button 
+              onClick={() => navigate('/subscription')}
+              className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all"
+            >
+              <Crown className="w-5 h-5 text-primary" />
+            </button>
+          </div>
         </div>
 
         {/* Search */}
