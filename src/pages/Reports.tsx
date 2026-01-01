@@ -1,11 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { Calendar, DollarSign, ShoppingBag, TrendingUp, Clock, CreditCard, Download, Crown, CalendarDays, CalendarRange, Eye, FileText, Package, ChevronRight, Lock, Star } from 'lucide-react';
+import { Calendar, DollarSign, ShoppingBag, TrendingUp, TrendingDown, Clock, CreditCard, Download, Crown, CalendarDays, CalendarRange, Eye, FileText, Package, ChevronRight, Lock, Star, Wallet, Receipt } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format, startOfMonth, endOfMonth, subDays, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { PageHeader } from '@/components/PageHeader';
 import { GlassNavigation } from '@/components/GlassNavigation';
 import { FeatureGate, PlanBadge } from '@/components/FeatureGate';
-import { usePOS, Transaction, CartItem } from '@/context/POSContext';
+import { usePOS, Transaction, CartItem, Expense } from '@/context/POSContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -29,7 +29,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 type ReportPeriod = 'daily' | 'weekly' | 'monthly' | 'custom';
 
 const Reports: React.FC = () => {
-  const { transactions } = usePOS();
+  const { transactions, expenses } = usePOS();
   const { hasFeature, currentPlan } = useSubscription();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -89,6 +89,47 @@ const Reports: React.FC = () => {
     sum + t.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0
   );
   const avgTransaction = filteredTransactions.length > 0 ? totalSales / filteredTransactions.length : 0;
+
+  // Filter expenses based on period
+  const getFilteredExpenses = () => {
+    const now = new Date();
+    const today = startOfDay(now);
+    const maxHistoryDate = subDays(today, maxHistoryDays);
+    
+    return expenses.filter(e => {
+      const expenseDate = new Date(e.date);
+      
+      if (expenseDate < maxHistoryDate) {
+        return false;
+      }
+      
+      switch (period) {
+        case 'daily':
+          return expenseDate >= today;
+        case 'weekly':
+          return expenseDate >= subDays(today, 7);
+        case 'monthly':
+          return isWithinInterval(expenseDate, {
+            start: startOfMonth(now),
+            end: endOfMonth(now),
+          });
+        case 'custom':
+          if (customStartDate && customEndDate) {
+            return isWithinInterval(expenseDate, {
+              start: startOfDay(customStartDate),
+              end: endOfDay(customEndDate),
+            });
+          }
+          return true;
+        default:
+          return true;
+      }
+    });
+  };
+
+  const filteredExpenses = getFilteredExpenses();
+  const totalExpenses = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const netIncome = totalSales - totalExpenses;
   
   // Calculate best-selling products
   const bestSellingProducts = useMemo(() => {
@@ -115,9 +156,6 @@ const Reports: React.FC = () => {
       .sort((a, b) => b.quantity - a.quantity)
       .slice(0, 5);
   }, [filteredTransactions]);
-
-  // Estimate profit (simple: 30% margin assumption for demo)
-  const estimatedProfit = totalSales * 0.3;
 
   const paymentBreakdown = {
     cash: filteredTransactions.filter(t => t.paymentMethod === 'cash').reduce((sum, t) => sum + t.total, 0),
@@ -339,19 +377,37 @@ const Reports: React.FC = () => {
           </div>
         </div>
 
-        {/* Profit Card */}
-        <div className="bg-gradient-to-r from-success/20 to-success/5 rounded-2xl p-4 border border-success/20">
+        {/* Expenses Card */}
+        <div className="bg-gradient-to-r from-destructive/20 to-destructive/5 rounded-2xl p-4 border border-destructive/20">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-success/20 rounded-xl flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-success" />
+              <div className="w-10 h-10 bg-destructive/20 rounded-xl flex items-center justify-center">
+                <TrendingDown className="w-5 h-5 text-destructive" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Estimated Profit</p>
-                <p className="text-2xl font-bold text-success">${estimatedProfit.toFixed(2)}</p>
+                <p className="text-sm text-muted-foreground">Total Expenses</p>
+                <p className="text-2xl font-bold text-destructive">${totalExpenses.toFixed(2)}</p>
               </div>
             </div>
-            <span className="text-xs text-muted-foreground bg-background/50 px-2 py-1 rounded-lg">~30% margin</span>
+            <span className="text-xs text-muted-foreground bg-background/50 px-2 py-1 rounded-lg">{filteredExpenses.length} items</span>
+          </div>
+        </div>
+
+        {/* Net Income Card */}
+        <div className={`bg-gradient-to-r ${netIncome >= 0 ? 'from-success/20 to-success/5 border-success/20' : 'from-destructive/20 to-destructive/5 border-destructive/20'} rounded-2xl p-4 border`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 ${netIncome >= 0 ? 'bg-success/20' : 'bg-destructive/20'} rounded-xl flex items-center justify-center`}>
+                <Wallet className={`w-5 h-5 ${netIncome >= 0 ? 'text-success' : 'text-destructive'}`} />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Net Income</p>
+                <p className={`text-2xl font-bold ${netIncome >= 0 ? 'text-success' : 'text-destructive'}`}>
+                  {netIncome >= 0 ? '' : '-'}${Math.abs(netIncome).toFixed(2)}
+                </p>
+              </div>
+            </div>
+            <span className="text-xs text-muted-foreground bg-background/50 px-2 py-1 rounded-lg">Sales - Expenses</span>
           </div>
         </div>
 
