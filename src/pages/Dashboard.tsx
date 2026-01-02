@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Package, Tag, Edit2, Trash2, TrendingUp, Clock, Receipt, ChevronRight } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
-import { GlassNavigation } from '@/components/GlassNavigation';
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { usePOS } from '@/context/POSContext';
 import {
   Drawer,
@@ -140,12 +140,14 @@ const Dashboard: React.FC = () => {
   const totalRevenue = transactions.reduce((sum, t) => sum + t.total, 0);
 
   return (
-    <div className="page-container bg-background">
-      <PageHeader title="Dashboard" />
+    <ResponsiveLayout>
+      <div className="min-h-screen bg-background">
+        <PageHeader title="Dashboard" />
 
-      {/* Tabs */}
-      <div className="px-4 mb-4">
-        <div className="bg-secondary/50 rounded-2xl p-1 flex">
+        {/* Tabs */}
+        <div className="px-4 md:px-6 lg:px-8 mb-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="bg-secondary/50 rounded-2xl p-1 flex">
           <button
             onClick={() => setActiveTab('overview')}
             className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-all ${
@@ -178,11 +180,13 @@ const Dashboard: React.FC = () => {
           >
             <Tag className="w-4 h-4 inline-block mr-1.5" />
             Categories
-          </button>
+            </button>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <main className="px-4 space-y-4 pb-32">
+        <main className="px-4 md:px-6 lg:px-8 pb-32 md:pb-8">
+          <div className="max-w-7xl mx-auto space-y-4">
         {/* Overview Tab */}
         {activeTab === 'overview' && (
           <>
@@ -379,104 +383,43 @@ const Dashboard: React.FC = () => {
             </div>
           </>
         )}
-      </main>
-
-      {/* Add Product Drawer */}
-      <Drawer open={showAddProduct} onOpenChange={setShowAddProduct}>
-        <DrawerContent className="max-h-[85vh] rounded-t-3xl">
-          <DrawerHeader className="pb-2">
-            <DrawerTitle className="text-xl font-bold text-center">Add Product</DrawerTitle>
-          </DrawerHeader>
-          <div className="px-4 pb-8 space-y-4">
-            <div>
-              <label className="text-sm text-muted-foreground mb-1.5 block">Product Name</label>
-              <input
-                type="text"
-                value={newProduct.name}
-                onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
-                placeholder="Enter product name"
-                className="w-full h-12 px-4 bg-secondary/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="text-sm text-muted-foreground mb-1.5 block">Price</label>
-              <input
-                type="number"
-                value={newProduct.price}
-                onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
-                placeholder="0.00"
-                step="0.01"
-                className="w-full h-12 px-4 bg-secondary/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="text-sm text-muted-foreground mb-1.5 block">Category</label>
-              <select
-                value={newProduct.category}
-                onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
-                className="w-full h-12 px-4 bg-secondary/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-              >
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-sm text-muted-foreground mb-1.5 block">Image URL (optional)</label>
-              <input
-                type="text"
-                value={newProduct.image}
-                onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
-                placeholder="https://..."
-                className="w-full h-12 px-4 bg-secondary/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-              />
-            </div>
-            <button
-              onClick={handleAddProduct}
-              disabled={!newProduct.name || !newProduct.price}
-              className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 btn-primary-glow"
-            >
-              Add Product
-            </button>
           </div>
-        </DrawerContent>
-      </Drawer>
+        </main>
 
-      {/* Edit Product Drawer */}
-      <Drawer open={showEditProduct} onOpenChange={setShowEditProduct}>
-        <DrawerContent className="max-h-[85vh] rounded-t-3xl">
-          <DrawerHeader className="pb-2">
-            <DrawerTitle className="text-xl font-bold text-center">Edit Product</DrawerTitle>
-          </DrawerHeader>
-          {editingProduct && (
+        {/* Add Product Drawer */}
+        <Drawer open={showAddProduct} onOpenChange={setShowAddProduct}>
+          <DrawerContent className="max-h-[85vh] rounded-t-3xl">
+            <DrawerHeader className="pb-2">
+              <DrawerTitle className="text-xl font-bold text-center">Add Product</DrawerTitle>
+            </DrawerHeader>
             <div className="px-4 pb-8 space-y-4">
               <div>
                 <label className="text-sm text-muted-foreground mb-1.5 block">Product Name</label>
                 <input
                   type="text"
-                  value={editingProduct.name}
-                  onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
+                  value={newProduct.name}
+                  onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
                   placeholder="Enter product name"
-                  className="w-full h-12 px-4 bg-secondary/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
               <div>
                 <label className="text-sm text-muted-foreground mb-1.5 block">Price</label>
                 <input
                   type="number"
-                  value={editingProduct.price}
-                  onChange={(e) => setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) || 0 })}
+                  value={newProduct.price}
+                  onChange={(e) => setNewProduct({ ...newProduct, price: e.target.value })}
                   placeholder="0.00"
                   step="0.01"
-                  className="w-full h-12 px-4 bg-secondary/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
               <div>
                 <label className="text-sm text-muted-foreground mb-1.5 block">Category</label>
                 <select
-                  value={editingProduct.category}
-                  onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
-                  className="w-full h-12 px-4 bg-secondary/50 border border-border rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  value={newProduct.category}
+                  onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
+                  className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
                 >
                   {categories.map(cat => (
                     <option key={cat.id} value={cat.id}>{cat.name}</option>
@@ -484,154 +427,195 @@ const Dashboard: React.FC = () => {
                 </select>
               </div>
               <div>
-                <label className="text-sm text-muted-foreground mb-1.5 block">Image URL</label>
+                <label className="text-sm text-muted-foreground mb-1.5 block">Image URL (optional)</label>
                 <input
                   type="text"
-                  value={editingProduct.image}
-                  onChange={(e) => setEditingProduct({ ...editingProduct, image: e.target.value })}
+                  value={newProduct.image}
+                  onChange={(e) => setNewProduct({ ...newProduct, image: e.target.value })}
                   placeholder="https://..."
-                  className="w-full h-12 px-4 bg-secondary/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
               <button
-                onClick={handleSaveProduct}
-                disabled={!editingProduct.name || !editingProduct.price}
-                className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 btn-primary-glow"
+                onClick={handleAddProduct}
+                className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all"
               >
-                Save Changes
+                Add Product
               </button>
             </div>
-          )}
-        </DrawerContent>
-      </Drawer>
+          </DrawerContent>
+        </Drawer>
 
-      {/* Add Category Drawer */}
-      <Drawer open={showAddCategory} onOpenChange={setShowAddCategory}>
-        <DrawerContent className="rounded-t-3xl">
-          <DrawerHeader className="pb-2">
-            <DrawerTitle className="text-xl font-bold text-center">Add Category</DrawerTitle>
-          </DrawerHeader>
-          <div className="px-4 pb-8 space-y-4">
-            <div>
-              <label className="text-sm text-muted-foreground mb-1.5 block">Category Name</label>
-              <input
-                type="text"
-                value={newCategory.name}
-                onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
-                placeholder="Enter category name"
-                className="w-full h-12 px-4 bg-secondary/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
-              />
-            </div>
-            <button
-              onClick={handleAddCategory}
-              disabled={!newCategory.name}
-              className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 btn-primary-glow"
-            >
-              Add Category
-            </button>
-          </div>
-        </DrawerContent>
-      </Drawer>
+        {/* Edit Product Drawer */}
+        <Drawer open={showEditProduct} onOpenChange={setShowEditProduct}>
+          <DrawerContent className="max-h-[85vh] rounded-t-3xl">
+            <DrawerHeader className="pb-2">
+              <DrawerTitle className="text-xl font-bold text-center">Edit Product</DrawerTitle>
+            </DrawerHeader>
+            {editingProduct && (
+              <div className="px-4 pb-8 space-y-4">
+                <div>
+                  <label className="text-sm text-muted-foreground mb-1.5 block">Product Name</label>
+                  <input
+                    type="text"
+                    value={editingProduct.name}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
+                    className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-1.5 block">Price</label>
+                  <input
+                    type="number"
+                    value={editingProduct.price}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, price: parseFloat(e.target.value) || 0 })}
+                    step="0.01"
+                    className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-1.5 block">Category</label>
+                  <select
+                    value={editingProduct.category}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
+                    className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  >
+                    {categories.map(cat => (
+                      <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <button
+                  onClick={handleSaveProduct}
+                  className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all"
+                >
+                  Save Changes
+                </button>
+              </div>
+            )}
+          </DrawerContent>
+        </Drawer>
 
-      {/* Edit Category Drawer */}
-      <Drawer open={showEditCategory} onOpenChange={setShowEditCategory}>
-        <DrawerContent className="rounded-t-3xl">
-          <DrawerHeader className="pb-2">
-            <DrawerTitle className="text-xl font-bold text-center">Edit Category</DrawerTitle>
-          </DrawerHeader>
-          {editingCategory && (
+        {/* Add Category Drawer */}
+        <Drawer open={showAddCategory} onOpenChange={setShowAddCategory}>
+          <DrawerContent className="max-h-[85vh] rounded-t-3xl">
+            <DrawerHeader className="pb-2">
+              <DrawerTitle className="text-xl font-bold text-center">Add Category</DrawerTitle>
+            </DrawerHeader>
             <div className="px-4 pb-8 space-y-4">
               <div>
                 <label className="text-sm text-muted-foreground mb-1.5 block">Category Name</label>
                 <input
                   type="text"
-                  value={editingCategory.name}
-                  onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
+                  value={newCategory.name}
+                  onChange={(e) => setNewCategory({ name: e.target.value })}
                   placeholder="Enter category name"
-                  className="w-full h-12 px-4 bg-secondary/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
+                  className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
               </div>
               <button
-                onClick={handleSaveCategory}
-                disabled={!editingCategory.name}
-                className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 btn-primary-glow"
+                onClick={handleAddCategory}
+                className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all"
               >
-                Save Changes
+                Add Category
               </button>
             </div>
-          )}
-        </DrawerContent>
-      </Drawer>
+          </DrawerContent>
+        </Drawer>
 
-      {/* Transaction Detail Drawer */}
-      <Drawer open={showTransactionDetail} onOpenChange={setShowTransactionDetail}>
-        <DrawerContent className="max-h-[85vh] rounded-t-3xl">
-          <DrawerHeader className="pb-2">
-            <DrawerTitle className="text-xl font-bold text-center">Transaction Details</DrawerTitle>
-          </DrawerHeader>
-          {selectedTransaction && (
-            <div className="px-4 pb-8 space-y-4">
-              <div className="bg-success/10 rounded-2xl p-4 text-center">
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Amount</p>
-                <p className="text-3xl font-bold text-success mt-1">${selectedTransaction.total.toFixed(2)}</p>
-                <p className="text-sm text-muted-foreground mt-2 capitalize">
-                  {selectedTransaction.paymentMethod} • {new Date(selectedTransaction.timestamp).toLocaleString()}
-                </p>
+        {/* Edit Category Drawer */}
+        <Drawer open={showEditCategory} onOpenChange={setShowEditCategory}>
+          <DrawerContent className="max-h-[85vh] rounded-t-3xl">
+            <DrawerHeader className="pb-2">
+              <DrawerTitle className="text-xl font-bold text-center">Edit Category</DrawerTitle>
+            </DrawerHeader>
+            {editingCategory && (
+              <div className="px-4 pb-8 space-y-4">
+                <div>
+                  <label className="text-sm text-muted-foreground mb-1.5 block">Category Name</label>
+                  <input
+                    type="text"
+                    value={editingCategory.name}
+                    onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
+                    className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+                <button
+                  onClick={handleSaveCategory}
+                  className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all"
+                >
+                  Save Changes
+                </button>
               </div>
+            )}
+          </DrawerContent>
+        </Drawer>
 
-              <div className="bg-secondary/30 rounded-2xl p-4">
-                <h4 className="font-semibold text-foreground mb-3">Items ({selectedTransaction.items.length})</h4>
+        {/* Transaction Detail Drawer */}
+        <Drawer open={showTransactionDetail} onOpenChange={setShowTransactionDetail}>
+          <DrawerContent className="max-h-[85vh] rounded-t-3xl">
+            <DrawerHeader className="pb-2">
+              <DrawerTitle className="text-xl font-bold text-center">Transaction Details</DrawerTitle>
+            </DrawerHeader>
+            {selectedTransaction && (
+              <div className="px-4 pb-8 space-y-4">
+                <div className="bg-gradient-to-br from-success/20 to-success/5 rounded-2xl p-6 text-center">
+                  <p className="text-sm text-muted-foreground">Total Amount</p>
+                  <p className="text-3xl font-bold text-success">${selectedTransaction.total.toFixed(2)}</p>
+                </div>
+                
                 <div className="space-y-2">
-                  {selectedTransaction.items.map((item: any, index: number) => (
-                    <div key={index} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                      <div className="flex items-center gap-3">
-                        <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover" />
-                        <div>
-                          <p className="font-medium text-foreground text-sm">{item.name}</p>
-                          <p className="text-xs text-muted-foreground">x{item.quantity}</p>
+                  <p className="text-sm text-muted-foreground">Date & Time</p>
+                  <p className="font-medium text-foreground">
+                    {new Date(selectedTransaction.timestamp).toLocaleString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Payment Method</p>
+                  <p className="font-medium text-foreground capitalize">{selectedTransaction.paymentMethod}</p>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">Items ({selectedTransaction.items.length})</p>
+                  <div className="space-y-2">
+                    {selectedTransaction.items.map((item: any, index: number) => (
+                      <div key={index} className="flex items-center justify-between bg-secondary/30 rounded-xl p-3">
+                        <div className="flex items-center gap-3">
+                          <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover" />
+                          <div>
+                            <p className="font-medium text-foreground text-sm">{item.name}</p>
+                            <p className="text-xs text-muted-foreground">x{item.quantity}</p>
+                          </div>
                         </div>
+                        <p className="font-semibold text-foreground">${(item.price * item.quantity).toFixed(2)}</p>
                       </div>
-                      <p className="font-semibold text-foreground">${(item.price * item.quantity).toFixed(2)}</p>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
+
+                {selectedTransaction.customer && (
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-foreground mb-2">Customer</h4>
+                    <p className="text-foreground">{selectedTransaction.customer.name}</p>
+                    {selectedTransaction.customer.phone && (
+                      <p className="text-sm text-muted-foreground">{selectedTransaction.customer.phone}</p>
+                    )}
+                  </div>
+                )}
               </div>
-
-              <div className="bg-secondary/30 rounded-2xl p-4 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Subtotal</span>
-                  <span className="text-foreground">${selectedTransaction.subtotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Discount</span>
-                  <span className="text-success">-${selectedTransaction.discount.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Tax</span>
-                  <span className="text-foreground">${selectedTransaction.tax.toFixed(2)}</span>
-                </div>
-                <div className="border-t border-border pt-2 flex justify-between">
-                  <span className="font-semibold text-foreground">Total</span>
-                  <span className="font-bold text-primary">${selectedTransaction.total.toFixed(2)}</span>
-                </div>
-              </div>
-
-              {selectedTransaction.customer && (
-                <div className="bg-secondary/30 rounded-2xl p-4">
-                  <h4 className="font-semibold text-foreground mb-2">Customer</h4>
-                  <p className="text-foreground">{selectedTransaction.customer.name}</p>
-                  {selectedTransaction.customer.phone && (
-                    <p className="text-sm text-muted-foreground">{selectedTransaction.customer.phone}</p>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </DrawerContent>
-      </Drawer>
-
-      <GlassNavigation />
-    </div>
+            )}
+          </DrawerContent>
+        </Drawer>
+      </div>
+    </ResponsiveLayout>
   );
 };
 

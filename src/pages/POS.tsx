@@ -3,7 +3,7 @@ import { Search, Crown, BarChart3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ProductCard } from '@/components/ProductCard';
 import { CategoryPill } from '@/components/CategoryPill';
-import { GlassNavigation } from '@/components/GlassNavigation';
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { PlanBadge } from '@/components/FeatureGate';
 import { useSubscription } from '@/context/SubscriptionContext';
 
@@ -41,83 +41,92 @@ const POS: React.FC = () => {
   const isTransactionLimitReached = !canMakeTransaction();
 
   return (
-    <div className="page-container bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-xl px-4 py-4 space-y-4 border-b border-border/50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-bold text-foreground">QuickPOS</span>
-            <PlanBadge />
+    <ResponsiveLayout>
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <header className="sticky top-0 z-30 bg-background/95 backdrop-blur-xl px-4 md:px-6 lg:px-8 py-4 space-y-4 border-b border-border/50">
+          <div className="flex items-center justify-between max-w-7xl mx-auto">
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold text-foreground md:hidden">QuickPOS</span>
+              <span className="hidden md:block text-xl font-bold text-foreground">Point of Sale</span>
+              <PlanBadge />
+            </div>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => navigate('/reports')}
+                className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-muted active:scale-95 transition-all"
+              >
+                <BarChart3 className="w-5 h-5 text-foreground" />
+              </button>
+              <button 
+                onClick={() => navigate('/subscription')}
+                className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all"
+              >
+                <Crown className="w-5 h-5 text-primary" />
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => navigate('/reports')}
-              className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center hover:bg-muted active:scale-95 transition-all"
-            >
-              <BarChart3 className="w-5 h-5 text-foreground" />
-            </button>
-            <button 
-              onClick={() => navigate('/subscription')}
-              className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary/20 active:scale-95 transition-all"
-            >
-              <Crown className="w-5 h-5 text-primary" />
-            </button>
+
+          {/* Search */}
+          <div className="max-w-7xl mx-auto">
+            <div className="relative md:max-w-md">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search menu..."
+                className="w-full h-12 pl-12 pr-4 bg-secondary/50 border-0 rounded-2xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search menu..."
-            className="w-full h-12 pl-12 pr-4 bg-secondary/50 border-0 rounded-2xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all"
-          />
-        </div>
+          {/* Categories */}
+          <div className="max-w-7xl mx-auto">
+            <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 md:mx-0 md:px-0">
+              {categories.map(category => (
+                <CategoryPill
+                  key={category.id}
+                  label={category.label}
+                  isActive={activeCategory === category.id}
+                  onClick={() => setActiveCategory(category.id)}
+                />
+              ))}
+            </div>
+          </div>
+        </header>
 
-        {/* Categories */}
-        <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4">
-          {categories.map(category => (
-            <CategoryPill
-              key={category.id}
-              label={category.label}
-              isActive={activeCategory === category.id}
-              onClick={() => setActiveCategory(category.id)}
-            />
-          ))}
-        </div>
-      </header>
+        {/* Transaction Limit Reached Banner */}
+        {isTransactionLimitReached && (
+          <div className="mx-4 md:mx-6 lg:mx-8 mt-4 max-w-7xl md:mx-auto">
+            <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-2xl">
+              <p className="text-sm text-destructive font-medium text-center">
+                Monthly transaction limit reached. Upgrade to continue.
+              </p>
+            </div>
+          </div>
+        )}
 
-      {/* Transaction Limit Reached Banner */}
-      {isTransactionLimitReached && (
-        <div className="mx-4 mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded-2xl">
-          <p className="text-sm text-destructive font-medium text-center">
-            Monthly transaction limit reached. Upgrade to continue.
-          </p>
-        </div>
-      )}
-
-      {/* Products Grid */}
-      <main className="px-4 py-4 pb-36">
-        <div className="grid grid-cols-2 gap-3">
-          {filteredProducts.map(product => (
-            <ProductCard
-              key={product.id}
-              id={product.id}
-              name={product.name}
-              description={product.description}
-              price={product.price}
-              image={product.image}
-              discount={product.discount}
-            />
-          ))}
-        </div>
-      </main>
-
-      <GlassNavigation />
-    </div>
+        {/* Products Grid */}
+        <main className="px-4 md:px-6 lg:px-8 py-4 pb-36 md:pb-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+              {filteredProducts.map(product => (
+                <ProductCard
+                  key={product.id}
+                  id={product.id}
+                  name={product.name}
+                  description={product.description}
+                  price={product.price}
+                  image={product.image}
+                  discount={product.discount}
+                />
+              ))}
+            </div>
+          </div>
+        </main>
+      </div>
+    </ResponsiveLayout>
   );
 };
 
