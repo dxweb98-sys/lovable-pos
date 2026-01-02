@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Plus, Package, Tag, Edit2, Trash2, TrendingUp, Clock, Receipt, ChevronRight } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
+import { ResponsiveModal, ResponsiveModalLarge } from '@/components/ResponsiveModal';
 import { usePOS } from '@/context/POSContext';
 import {
   Drawer,

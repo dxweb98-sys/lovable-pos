@@ -1,13 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { Calendar, DollarSign, ShoppingBag, TrendingUp, TrendingDown, Clock, CreditCard, Download, Crown, CalendarDays, CalendarRange, Eye, FileText, Package, ChevronRight, Lock, Star, Wallet, Receipt } from 'lucide-react';
+import { Calendar, DollarSign, ShoppingBag, TrendingUp, TrendingDown, Clock, CreditCard, Download, Crown, CalendarDays, CalendarRange, Eye, FileText, Package, ChevronRight, Lock, Star, Wallet, Receipt, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format, startOfMonth, endOfMonth, subDays, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { PageHeader } from '@/components/PageHeader';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
+import { ResponsiveModal, ResponsiveModalLarge } from '@/components/ResponsiveModal';
 import { FeatureGate, PlanBadge } from '@/components/FeatureGate';
 import { usePOS, Transaction, CartItem, Expense } from '@/context/POSContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useToast } from '@/hooks/use-toast';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import {
   Drawer,
   DrawerContent,
@@ -15,7 +17,6 @@ import {
   DrawerTitle,
   DrawerClose,
 } from '@/components/ui/drawer';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import {
   Table,
   TableBody,

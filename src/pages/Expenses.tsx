@@ -1,12 +1,14 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, DollarSign, MinusCircle, Trash2, TrendingDown, Calendar, Crown, Lock, Eye, Download, ChevronRight } from 'lucide-react';
+import { Plus, DollarSign, MinusCircle, Trash2, TrendingDown, Calendar, Crown, Lock, Eye, Download, ChevronRight, X } from 'lucide-react';
 import { format, startOfDay, subDays } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
+import { ResponsiveModal, ResponsiveModalLarge } from '@/components/ResponsiveModal';
 import { usePOS, Expense } from '@/context/POSContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useToast } from '@/hooks/use-toast';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Drawer,
   DrawerContent,
@@ -14,7 +16,6 @@ import {
   DrawerTitle,
   DrawerClose,
 } from '@/components/ui/drawer';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 const Expenses: React.FC = () => {
   const [newExpenseDesc, setNewExpenseDesc] = useState('');

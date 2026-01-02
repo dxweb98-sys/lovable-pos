@@ -1,7 +1,6 @@
 import React from 'react';
 import { Home, LayoutDashboard, MinusCircle, User, ShoppingBag, Crown } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { usePOS } from '@/context/POSContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 
 const navItems = [
@@ -11,14 +10,9 @@ const navItems = [
   { icon: User, label: 'Profile', path: '/profile' },
 ];
 
-interface DesktopSidebarProps {
-  onCartClick: () => void;
-}
-
-export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ onCartClick }) => {
+export const DesktopSidebar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { cartCount } = usePOS();
   const { currentPlan } = useSubscription();
 
   return (
@@ -56,24 +50,6 @@ export const DesktopSidebar: React.FC<DesktopSidebarProps> = ({ onCartClick }) =
           );
         })}
       </nav>
-
-      {/* Cart Button */}
-      <div className="p-4 border-t border-border">
-        <button
-          onClick={onCartClick}
-          className="w-full flex items-center justify-between px-4 py-3 bg-primary text-primary-foreground rounded-xl hover:opacity-90 transition-all"
-        >
-          <div className="flex items-center gap-3">
-            <ShoppingBag className="w-5 h-5" />
-            <span className="font-semibold">View Cart</span>
-          </div>
-          {cartCount > 0 && (
-            <span className="min-w-[24px] h-6 bg-primary-foreground text-primary text-sm font-bold rounded-full flex items-center justify-center px-2">
-              {cartCount > 99 ? '99+' : cartCount}
-            </span>
-          )}
-        </button>
-      </div>
 
       {/* Upgrade Banner (for free users) */}
       {currentPlan === 'free' && (

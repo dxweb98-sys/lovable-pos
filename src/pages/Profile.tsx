@@ -17,18 +17,19 @@ import { useNavigate } from 'react-router-dom';
 import { format, subDays, isAfter, startOfDay } from 'date-fns';
 import { PageHeader } from '@/components/PageHeader';
 import { ResponsiveLayout } from '@/components/ResponsiveLayout';
+import { ResponsiveModal, ResponsiveModalLarge } from '@/components/ResponsiveModal';
 import { usePOS } from '@/context/POSContext';
 import { useAuth } from '@/context/AuthContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 
 interface StoreSettings {
   storeName: string;
