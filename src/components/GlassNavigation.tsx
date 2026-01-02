@@ -43,7 +43,7 @@ export const GlassNavigation: React.FC = () => {
 
   return (
     <>
-      <nav className="fixed bottom-4 left-4 right-4 z-50">
+      <nav className="fixed bottom-4 left-4 right-4 z-50 md:hidden">
         <div className="bg-background/80 backdrop-blur-2xl border border-border/50 rounded-3xl shadow-xl">
           <div className="flex items-center justify-between max-w-lg mx-auto px-2 relative">
             {/* Left nav items */}

@@ -3,7 +3,7 @@ import { Calendar, DollarSign, ShoppingBag, TrendingUp, TrendingDown, Clock, Cre
 import { useNavigate } from 'react-router-dom';
 import { format, startOfMonth, endOfMonth, subDays, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { PageHeader } from '@/components/PageHeader';
-import { GlassNavigation } from '@/components/GlassNavigation';
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { FeatureGate, PlanBadge } from '@/components/FeatureGate';
 import { usePOS, Transaction, CartItem, Expense } from '@/context/POSContext';
 import { useSubscription } from '@/context/SubscriptionContext';
@@ -283,7 +283,8 @@ const Reports: React.FC = () => {
   const canAccessAdvancedReports = currentPlan !== 'free';
 
   return (
-    <div className="page-container bg-background">
+    <ResponsiveLayout>
+      <div className="min-h-screen bg-background">
       <PageHeader 
         title="Reports" 
         showBack={true}
@@ -765,8 +766,8 @@ const Reports: React.FC = () => {
         </DrawerContent>
       </Drawer>
 
-      <GlassNavigation />
-    </div>
+      </div>
+    </ResponsiveLayout>
   );
 };
 

@@ -3,7 +3,7 @@ import { Plus, DollarSign, MinusCircle, Trash2, TrendingDown, Calendar, Crown, L
 import { format, startOfDay, subDays } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
-import { GlassNavigation } from '@/components/GlassNavigation';
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { usePOS, Expense } from '@/context/POSContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useToast } from '@/hooks/use-toast';
@@ -150,7 +150,8 @@ const Expenses: React.FC = () => {
   };
 
   return (
-    <div className="page-container bg-background">
+    <ResponsiveLayout>
+      <div className="min-h-screen bg-background">
       <PageHeader 
         title="Expenses" 
         showBack
@@ -485,8 +486,8 @@ const Expenses: React.FC = () => {
         </DrawerContent>
       </Drawer>
 
-      <GlassNavigation />
-    </div>
+      </div>
+    </ResponsiveLayout>
   );
 };
 

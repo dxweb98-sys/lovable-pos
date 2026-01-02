@@ -16,7 +16,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { format, subDays, isAfter, startOfDay } from 'date-fns';
 import { PageHeader } from '@/components/PageHeader';
-import { GlassNavigation } from '@/components/GlassNavigation';
+import { ResponsiveLayout } from '@/components/ResponsiveLayout';
 import { usePOS } from '@/context/POSContext';
 import { useAuth } from '@/context/AuthContext';
 import { useSubscription } from '@/context/SubscriptionContext';
@@ -210,7 +210,8 @@ const Profile: React.FC = () => {
   ];
 
   return (
-    <div className="page-container bg-background">
+    <ResponsiveLayout>
+      <div className="min-h-screen bg-background">
       <PageHeader title="Profile" showBack />
 
       <main className="px-4 space-y-4 pb-36">
@@ -594,8 +595,8 @@ const Profile: React.FC = () => {
         </DrawerContent>
       </Drawer>
 
-      <GlassNavigation />
-    </div>
+      </div>
+    </ResponsiveLayout>
   );
 };
 
