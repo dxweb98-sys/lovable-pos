@@ -9,13 +9,6 @@ import { usePOS, Expense } from '@/context/POSContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerClose,
-} from '@/components/ui/drawer';
 
 const Expenses: React.FC = () => {
   const [newExpenseDesc, setNewExpenseDesc] = useState('');
@@ -388,104 +381,92 @@ const Expenses: React.FC = () => {
         )}
       </main>
 
-      {/* Expense Detail Drawer */}
-      <Drawer open={showExpenseDetail} onOpenChange={setShowExpenseDetail}>
-        <DrawerContent>
-          <DrawerHeader className="border-b border-border pb-4">
-            <DrawerTitle>Expense Details</DrawerTitle>
-          </DrawerHeader>
-          {selectedExpense && (
-            <div className="p-6 space-y-6">
-              <div className="bg-destructive/10 rounded-2xl p-6 text-center">
-                <p className="text-sm text-muted-foreground mb-1">Amount</p>
-                <p className="text-4xl font-bold text-destructive">-${selectedExpense.amount.toFixed(2)}</p>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between py-3 border-b border-border">
-                  <span className="text-muted-foreground">Description</span>
-                  <span className="font-medium text-foreground">{selectedExpense.description}</span>
-                </div>
-                <div className="flex items-center justify-between py-3 border-b border-border">
-                  <span className="text-muted-foreground">Date</span>
-                  <span className="font-medium text-foreground">
-                    {format(new Date(selectedExpense.date), 'MMMM d, yyyy')}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between py-3 border-b border-border">
-                  <span className="text-muted-foreground">Time</span>
-                  <span className="font-medium text-foreground">
-                    {format(new Date(selectedExpense.date), 'h:mm a')}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between py-3">
-                  <span className="text-muted-foreground">ID</span>
-                  <span className="font-mono text-xs text-muted-foreground">{selectedExpense.id}</span>
-                </div>
-              </div>
-              
-              <button
-                onClick={() => handleRemoveExpense(selectedExpense.id)}
-                className="w-full h-12 bg-destructive text-destructive-foreground font-medium rounded-2xl hover:opacity-90 transition-all flex items-center justify-center gap-2"
-              >
-                <Trash2 className="w-5 h-5" />
-                Delete Expense
-              </button>
+      {/* Expense Detail Modal */}
+      <ResponsiveModal open={showExpenseDetail} onOpenChange={setShowExpenseDetail} title="Expense Details">
+        {selectedExpense && (
+          <div className="space-y-6 pt-4">
+            <div className="bg-destructive/10 rounded-2xl p-6 text-center">
+              <p className="text-sm text-muted-foreground mb-1">Amount</p>
+              <p className="text-4xl font-bold text-destructive">-${selectedExpense.amount.toFixed(2)}</p>
             </div>
-          )}
-        </DrawerContent>
-      </Drawer>
+            
+            <div className="space-y-4">
+              <div className="flex items-center justify-between py-3 border-b border-border">
+                <span className="text-muted-foreground">Description</span>
+                <span className="font-medium text-foreground">{selectedExpense.description}</span>
+              </div>
+              <div className="flex items-center justify-between py-3 border-b border-border">
+                <span className="text-muted-foreground">Date</span>
+                <span className="font-medium text-foreground">
+                  {format(new Date(selectedExpense.date), 'MMMM d, yyyy')}
+                </span>
+              </div>
+              <div className="flex items-center justify-between py-3 border-b border-border">
+                <span className="text-muted-foreground">Time</span>
+                <span className="font-medium text-foreground">
+                  {format(new Date(selectedExpense.date), 'h:mm a')}
+                </span>
+              </div>
+              <div className="flex items-center justify-between py-3">
+                <span className="text-muted-foreground">ID</span>
+                <span className="font-mono text-xs text-muted-foreground">{selectedExpense.id}</span>
+              </div>
+            </div>
+            
+            <button
+              onClick={() => handleRemoveExpense(selectedExpense.id)}
+              className="w-full h-12 bg-destructive text-destructive-foreground font-medium rounded-2xl hover:opacity-90 transition-all flex items-center justify-center gap-2"
+            >
+              <Trash2 className="w-5 h-5" />
+              Delete Expense
+            </button>
+          </div>
+        )}
+      </ResponsiveModal>
 
-      {/* All Expenses Drawer */}
-      <Drawer open={showAllExpenses} onOpenChange={setShowAllExpenses}>
-        <DrawerContent className="max-h-[85vh]">
-          <DrawerHeader className="border-b border-border pb-4">
-            <DrawerTitle>All Expenses ({accessibleExpenses.length})</DrawerTitle>
-          </DrawerHeader>
-          <ScrollArea className="h-[60vh] px-4">
-            <div className="py-4 space-y-4">
-              {Object.entries(expensesByDate)
-                .sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime())
-                .map(([date, dayExpenses]) => {
-                  const dayTotal = dayExpenses.reduce((sum, e) => sum + e.amount, 0);
-                  return (
-                    <div key={date} className="bg-card rounded-2xl p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <p className="text-sm font-semibold text-foreground">
-                          {format(new Date(date), 'EEEE, MMM d')}
-                        </p>
-                        <span className="text-sm font-bold text-destructive">-${dayTotal.toFixed(2)}</span>
-                      </div>
-                      <div className="space-y-2">
-                        {dayExpenses.map(expense => (
-                          <button 
-                            key={expense.id} 
-                            onClick={() => {
-                              setShowAllExpenses(false);
-                              handleViewExpense(expense);
-                            }}
-                            className="w-full bg-secondary/50 rounded-xl p-3 flex items-center justify-between hover:bg-secondary/70 transition-colors text-left"
-                          >
-                            <div>
-                              <p className="font-medium text-foreground text-sm">{expense.description}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {format(new Date(expense.date), 'h:mm a')}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold text-destructive text-sm">-${expense.amount.toFixed(2)}</span>
-                              <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-          </ScrollArea>
-        </DrawerContent>
-      </Drawer>
+      {/* All Expenses Modal */}
+      <ResponsiveModalLarge open={showAllExpenses} onOpenChange={setShowAllExpenses} title={`All Expenses (${accessibleExpenses.length})`}>
+        <div className="py-4 space-y-4">
+          {Object.entries(expensesByDate)
+            .sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime())
+            .map(([date, dayExpenses]) => {
+              const dayTotal = dayExpenses.reduce((sum, e) => sum + e.amount, 0);
+              return (
+                <div key={date} className="bg-card rounded-2xl p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-sm font-semibold text-foreground">
+                      {format(new Date(date), 'EEEE, MMM d')}
+                    </p>
+                    <span className="text-sm font-bold text-destructive">-${dayTotal.toFixed(2)}</span>
+                  </div>
+                  <div className="space-y-2">
+                    {dayExpenses.map(expense => (
+                      <button 
+                        key={expense.id} 
+                        onClick={() => {
+                          setShowAllExpenses(false);
+                          handleViewExpense(expense);
+                        }}
+                        className="w-full bg-secondary/50 rounded-xl p-3 flex items-center justify-between hover:bg-secondary/70 transition-colors text-left"
+                      >
+                        <div>
+                          <p className="font-medium text-foreground text-sm">{expense.description}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {format(new Date(expense.date), 'h:mm a')}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-destructive text-sm">-${expense.amount.toFixed(2)}</span>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+        </div>
+      </ResponsiveModalLarge>
 
       </div>
     </ResponsiveLayout>

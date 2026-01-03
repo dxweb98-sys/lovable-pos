@@ -24,12 +24,6 @@ import { useSubscription } from '@/context/SubscriptionContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from '@/components/ui/drawer';
 
 interface StoreSettings {
   storeName: string;
@@ -295,306 +289,276 @@ const Profile: React.FC = () => {
         </button>
       </main>
 
-      {/* Change Password Drawer */}
-      <Drawer open={showChangePassword} onOpenChange={setShowChangePassword}>
-        <DrawerContent className="max-h-[85vh] rounded-t-3xl">
-          <DrawerHeader className="pb-2">
-            <DrawerTitle className="text-xl font-bold text-center">Change Password</DrawerTitle>
-          </DrawerHeader>
-
-          <form onSubmit={handleChangePassword} className="px-4 pb-8 space-y-4">
-            <div>
-              <label className="text-sm text-muted-foreground mb-1.5 block">New Password</label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Enter new password"
-                className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm text-muted-foreground mb-1.5 block">Confirm Password</label>
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm new password"
-                className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isUpdating}
-              className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
-            >
-              {isUpdating ? 'Updating...' : 'Update Password'}
-            </button>
-          </form>
-        </DrawerContent>
-      </Drawer>
-
-      {/* Store Settings Drawer */}
-      <Drawer open={showStoreSettings} onOpenChange={setShowStoreSettings}>
-        <DrawerContent className="max-h-[85vh] rounded-t-3xl">
-          <DrawerHeader className="pb-2">
-            <DrawerTitle className="text-xl font-bold text-center">Store Settings</DrawerTitle>
-          </DrawerHeader>
-
-          <div className="px-4 pb-8 space-y-4">
-            <div>
-              <label className="text-sm text-muted-foreground mb-1.5 block">Store Name</label>
-              <input
-                type="text"
-                value={storeSettings.storeName}
-                onChange={(e) => setStoreSettings({ ...storeSettings, storeName: e.target.value })}
-                className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm text-muted-foreground mb-1.5 block">Address</label>
-              <input
-                type="text"
-                value={storeSettings.storeAddress}
-                onChange={(e) => setStoreSettings({ ...storeSettings, storeAddress: e.target.value })}
-                className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm text-muted-foreground mb-1.5 block">Phone</label>
-              <input
-                type="tel"
-                value={storeSettings.storePhone}
-                onChange={(e) => setStoreSettings({ ...storeSettings, storePhone: e.target.value })}
-                className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-              />
-            </div>
-
-            <button
-              onClick={() => handleSaveSettings('Store')}
-              className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-            >
-              <Save className="w-5 h-5" />
-              Save Settings
-            </button>
+      {/* Change Password Modal */}
+      <ResponsiveModal open={showChangePassword} onOpenChange={setShowChangePassword} title="Change Password">
+        <form onSubmit={handleChangePassword} className="space-y-4 pt-4">
+          <div>
+            <label className="text-sm text-muted-foreground mb-1.5 block">New Password</label>
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Enter new password"
+              className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
           </div>
-        </DrawerContent>
-      </Drawer>
 
-      {/* Payment Settings Drawer */}
-      <Drawer open={showPaymentSettings} onOpenChange={setShowPaymentSettings}>
-        <DrawerContent className="max-h-[85vh] rounded-t-3xl">
-          <DrawerHeader className="pb-2">
-            <DrawerTitle className="text-xl font-bold text-center">Payment Settings</DrawerTitle>
-          </DrawerHeader>
+          <div>
+            <label className="text-sm text-muted-foreground mb-1.5 block">Confirm Password</label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Confirm new password"
+              className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
 
-          <div className="px-4 pb-8 space-y-4">
+          <button
+            type="submit"
+            disabled={isUpdating}
+            className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
+          >
+            {isUpdating ? 'Updating...' : 'Update Password'}
+          </button>
+        </form>
+      </ResponsiveModal>
+
+      {/* Store Settings Modal */}
+      <ResponsiveModal open={showStoreSettings} onOpenChange={setShowStoreSettings} title="Store Settings">
+        <div className="space-y-4 pt-4">
+          <div>
+            <label className="text-sm text-muted-foreground mb-1.5 block">Store Name</label>
+            <input
+              type="text"
+              value={storeSettings.storeName}
+              onChange={(e) => setStoreSettings({ ...storeSettings, storeName: e.target.value })}
+              className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm text-muted-foreground mb-1.5 block">Address</label>
+            <input
+              type="text"
+              value={storeSettings.storeAddress}
+              onChange={(e) => setStoreSettings({ ...storeSettings, storeAddress: e.target.value })}
+              className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm text-muted-foreground mb-1.5 block">Phone</label>
+            <input
+              type="tel"
+              value={storeSettings.storePhone}
+              onChange={(e) => setStoreSettings({ ...storeSettings, storePhone: e.target.value })}
+              className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+
+          <button
+            onClick={() => handleSaveSettings('Store')}
+            className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+          >
+            <Save className="w-5 h-5" />
+            Save Settings
+          </button>
+        </div>
+      </ResponsiveModal>
+
+      {/* Payment Settings Modal */}
+      <ResponsiveModalLarge open={showPaymentSettings} onOpenChange={setShowPaymentSettings} title="Payment Settings">
+        <div className="space-y-4 pt-4">
+          <div className="space-y-3">
+            <label className="flex items-center justify-between p-4 bg-secondary rounded-xl">
+              <span className="font-medium text-foreground">Cash Payments</span>
+              <input
+                type="checkbox"
+                checked={paymentSettings.cashEnabled}
+                onChange={(e) => setPaymentSettings({ ...paymentSettings, cashEnabled: e.target.checked })}
+                className="w-5 h-5 rounded accent-primary"
+              />
+            </label>
+            <label className="flex items-center justify-between p-4 bg-secondary rounded-xl">
+              <span className="font-medium text-foreground">Card Payments</span>
+              <input
+                type="checkbox"
+                checked={paymentSettings.cardEnabled}
+                onChange={(e) => setPaymentSettings({ ...paymentSettings, cardEnabled: e.target.checked })}
+                className="w-5 h-5 rounded accent-primary"
+              />
+            </label>
+            <label className="flex items-center justify-between p-4 bg-secondary rounded-xl">
+              <span className="font-medium text-foreground">QRIS Payments</span>
+              <input
+                type="checkbox"
+                checked={paymentSettings.qrisEnabled}
+                onChange={(e) => setPaymentSettings({ ...paymentSettings, qrisEnabled: e.target.checked })}
+                className="w-5 h-5 rounded accent-primary"
+              />
+            </label>
+          </div>
+
+          {paymentSettings.qrisEnabled && (
             <div className="space-y-3">
-              <label className="flex items-center justify-between p-4 bg-secondary rounded-xl">
-                <span className="font-medium text-foreground">Cash Payments</span>
+              <div>
+                <label className="text-sm text-muted-foreground mb-1.5 block">QRIS Name</label>
                 <input
-                  type="checkbox"
-                  checked={paymentSettings.cashEnabled}
-                  onChange={(e) => setPaymentSettings({ ...paymentSettings, cashEnabled: e.target.checked })}
-                  className="w-5 h-5 rounded accent-primary"
+                  type="text"
+                  value={paymentSettings.qrisName}
+                  onChange={(e) => setPaymentSettings({ ...paymentSettings, qrisName: e.target.value })}
+                  className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
-              </label>
-              <label className="flex items-center justify-between p-4 bg-secondary rounded-xl">
-                <span className="font-medium text-foreground">Card Payments</span>
-                <input
-                  type="checkbox"
-                  checked={paymentSettings.cardEnabled}
-                  onChange={(e) => setPaymentSettings({ ...paymentSettings, cardEnabled: e.target.checked })}
-                  className="w-5 h-5 rounded accent-primary"
-                />
-              </label>
-              <label className="flex items-center justify-between p-4 bg-secondary rounded-xl">
-                <span className="font-medium text-foreground">QRIS Payments</span>
-                <input
-                  type="checkbox"
-                  checked={paymentSettings.qrisEnabled}
-                  onChange={(e) => setPaymentSettings({ ...paymentSettings, qrisEnabled: e.target.checked })}
-                  className="w-5 h-5 rounded accent-primary"
-                />
-              </label>
-            </div>
-
-            {paymentSettings.qrisEnabled && (
-              <div className="space-y-3">
-                <div>
-                  <label className="text-sm text-muted-foreground mb-1.5 block">QRIS Name</label>
-                  <input
-                    type="text"
-                    value={paymentSettings.qrisName}
-                    onChange={(e) => setPaymentSettings({ ...paymentSettings, qrisName: e.target.value })}
-                    className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm text-muted-foreground mb-1.5 block">Merchant ID</label>
-                  <input
-                    type="text"
-                    value={paymentSettings.qrisMerchantId}
-                    onChange={(e) => setPaymentSettings({ ...paymentSettings, qrisMerchantId: e.target.value })}
-                    className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  />
-                </div>
               </div>
-            )}
-
-            <button
-              onClick={() => handleSaveSettings('Payment')}
-              className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-            >
-              <Save className="w-5 h-5" />
-              Save Settings
-            </button>
-          </div>
-        </DrawerContent>
-      </Drawer>
-
-      {/* Receipt Settings Drawer */}
-      <Drawer open={showReceiptSettings} onOpenChange={setShowReceiptSettings}>
-        <DrawerContent className="max-h-[85vh] rounded-t-3xl">
-          <DrawerHeader className="pb-2">
-            <DrawerTitle className="text-xl font-bold text-center">Receipt Settings</DrawerTitle>
-          </DrawerHeader>
-
-          <div className="px-4 pb-8 space-y-4">
-            <div className="space-y-3">
-              <label className="flex items-center justify-between p-4 bg-secondary rounded-xl">
-                <span className="font-medium text-foreground">Show Logo</span>
+              <div>
+                <label className="text-sm text-muted-foreground mb-1.5 block">Merchant ID</label>
                 <input
-                  type="checkbox"
-                  checked={receiptSettings.showLogo}
-                  onChange={(e) => setReceiptSettings({ ...receiptSettings, showLogo: e.target.checked })}
-                  className="w-5 h-5 rounded accent-primary"
+                  type="text"
+                  value={paymentSettings.qrisMerchantId}
+                  onChange={(e) => setPaymentSettings({ ...paymentSettings, qrisMerchantId: e.target.value })}
+                  className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
                 />
-              </label>
-              <label className="flex items-center justify-between p-4 bg-secondary rounded-xl">
-                <span className="font-medium text-foreground">Show Address</span>
-                <input
-                  type="checkbox"
-                  checked={receiptSettings.showAddress}
-                  onChange={(e) => setReceiptSettings({ ...receiptSettings, showAddress: e.target.checked })}
-                  className="w-5 h-5 rounded accent-primary"
-                />
-              </label>
-              <label className="flex items-center justify-between p-4 bg-secondary rounded-xl">
-                <span className="font-medium text-foreground">Show Phone</span>
-                <input
-                  type="checkbox"
-                  checked={receiptSettings.showPhone}
-                  onChange={(e) => setReceiptSettings({ ...receiptSettings, showPhone: e.target.checked })}
-                  className="w-5 h-5 rounded accent-primary"
-                />
-              </label>
+              </div>
             </div>
+          )}
 
-            <div>
-              <label className="text-sm text-muted-foreground mb-1.5 block">Footer Text</label>
+          <button
+            onClick={() => handleSaveSettings('Payment')}
+            className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+          >
+            <Save className="w-5 h-5" />
+            Save Settings
+          </button>
+        </div>
+      </ResponsiveModalLarge>
+
+      {/* Receipt Settings Modal */}
+      <ResponsiveModal open={showReceiptSettings} onOpenChange={setShowReceiptSettings} title="Receipt Settings">
+        <div className="space-y-4 pt-4">
+          <div className="space-y-3">
+            <label className="flex items-center justify-between p-4 bg-secondary rounded-xl">
+              <span className="font-medium text-foreground">Show Logo</span>
               <input
-                type="text"
-                value={receiptSettings.footerText}
-                onChange={(e) => setReceiptSettings({ ...receiptSettings, footerText: e.target.value })}
-                className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+                type="checkbox"
+                checked={receiptSettings.showLogo}
+                onChange={(e) => setReceiptSettings({ ...receiptSettings, showLogo: e.target.checked })}
+                className="w-5 h-5 rounded accent-primary"
               />
-            </div>
-
-            <button
-              onClick={() => handleSaveSettings('Receipt')}
-              className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-            >
-              <Save className="w-5 h-5" />
-              Save Settings
-            </button>
+            </label>
+            <label className="flex items-center justify-between p-4 bg-secondary rounded-xl">
+              <span className="font-medium text-foreground">Show Address</span>
+              <input
+                type="checkbox"
+                checked={receiptSettings.showAddress}
+                onChange={(e) => setReceiptSettings({ ...receiptSettings, showAddress: e.target.checked })}
+                className="w-5 h-5 rounded accent-primary"
+              />
+            </label>
+            <label className="flex items-center justify-between p-4 bg-secondary rounded-xl">
+              <span className="font-medium text-foreground">Show Phone</span>
+              <input
+                type="checkbox"
+                checked={receiptSettings.showPhone}
+                onChange={(e) => setReceiptSettings({ ...receiptSettings, showPhone: e.target.checked })}
+                className="w-5 h-5 rounded accent-primary"
+              />
+            </label>
           </div>
-        </DrawerContent>
-      </Drawer>
 
-      {/* Transaction History Drawer */}
-      <Drawer open={showTransactionHistory} onOpenChange={setShowTransactionHistory}>
-        <DrawerContent className="max-h-[90vh] rounded-t-3xl">
-          <DrawerHeader className="pb-2">
-            <DrawerTitle className="text-xl font-bold text-center">Transaction History</DrawerTitle>
-          </DrawerHeader>
+          <div>
+            <label className="text-sm text-muted-foreground mb-1.5 block">Footer Text</label>
+            <input
+              type="text"
+              value={receiptSettings.footerText}
+              onChange={(e) => setReceiptSettings({ ...receiptSettings, footerText: e.target.value })}
+              className="w-full h-12 px-4 bg-secondary border-0 rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
 
-          <div className="px-4 pb-8 space-y-4 overflow-y-auto max-h-[70vh]">
-            {/* Free Plan Notice */}
-            {currentPlan === 'free' && (
-              <div className="bg-warning/10 border border-warning/20 rounded-2xl p-4 flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-medium text-foreground text-sm">Free Plan Limitation</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    You can only view transactions from the last 7 days. Upgrade to see full history.
-                  </p>
-                  <button
-                    onClick={() => {
-                      setShowTransactionHistory(false);
-                      navigate('/subscription');
-                    }}
-                    className="mt-2 text-xs text-primary font-medium flex items-center gap-1"
-                  >
-                    <Crown className="w-3 h-3" />
-                    Upgrade Now
-                  </button>
-                </div>
+          <button
+            onClick={() => handleSaveSettings('Receipt')}
+            className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+          >
+            <Save className="w-5 h-5" />
+            Save Settings
+          </button>
+        </div>
+      </ResponsiveModal>
+
+      {/* Transaction History Modal */}
+      <ResponsiveModalLarge open={showTransactionHistory} onOpenChange={setShowTransactionHistory} title="Transaction History">
+        <div className="space-y-4 pt-4">
+          {/* Free Plan Notice */}
+          {currentPlan === 'free' && (
+            <div className="bg-warning/10 border border-warning/20 rounded-2xl p-4 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-foreground text-sm">Free Plan Limitation</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  You can only view transactions from the last 7 days. Upgrade to see full history.
+                </p>
+                <button
+                  onClick={() => {
+                    setShowTransactionHistory(false);
+                    navigate('/subscription');
+                  }}
+                  className="mt-2 text-xs text-primary font-medium flex items-center gap-1"
+                >
+                  <Crown className="w-3 h-3" />
+                  Upgrade Now
+                </button>
               </div>
-            )}
-
-            {/* Date Picker */}
-            <div className="bg-card rounded-2xl p-4">
-              <CalendarComponent
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => date && setSelectedDate(date)}
-                disabled={(date) => 
-                  date > new Date() || 
-                  isDateDisabledForFree(date)
-                }
-                className="rounded-xl"
-              />
             </div>
+          )}
 
-            {/* Transactions for Selected Date */}
-            <div className="space-y-2">
-              <h4 className="font-semibold text-foreground">
-                {format(selectedDate, 'EEEE, MMMM d, yyyy')}
-              </h4>
-              {filteredHistoryTransactions.length > 0 ? (
-                filteredHistoryTransactions.map(t => (
-                  <div key={t.id} className="bg-card rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-muted-foreground">
-                        {new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                      <span className="text-xs bg-secondary px-2 py-1 rounded-lg capitalize">
-                        {t.paymentMethod}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-foreground">
-                        {t.items.length} items
-                      </span>
-                      <span className="font-bold text-primary">${t.total.toFixed(2)}</span>
-                    </div>
+          {/* Date Picker */}
+          <div className="bg-card rounded-2xl p-4 flex justify-center">
+            <CalendarComponent
+              mode="single"
+              selected={selectedDate}
+              onSelect={(date) => date && setSelectedDate(date)}
+              disabled={(date) => 
+                date > new Date() || 
+                isDateDisabledForFree(date)
+              }
+              className="rounded-xl"
+            />
+          </div>
+
+          {/* Transactions for Selected Date */}
+          <div className="space-y-2">
+            <h4 className="font-semibold text-foreground">
+              {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+            </h4>
+            {filteredHistoryTransactions.length > 0 ? (
+              filteredHistoryTransactions.map(t => (
+                <div key={t.id} className="bg-card rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-muted-foreground">
+                      {new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                    <span className="text-xs bg-secondary px-2 py-1 rounded-lg capitalize">
+                      {t.paymentMethod}
+                    </span>
                   </div>
-                ))
-              ) : (
-                <div className="bg-card rounded-xl p-8 text-center">
-                  <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-muted-foreground">No transactions on this date</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-foreground">
+                      {t.items.length} items
+                    </span>
+                    <span className="font-bold text-primary">${t.total.toFixed(2)}</span>
+                  </div>
                 </div>
-              )}
-            </div>
+              ))
+            ) : (
+              <div className="bg-card rounded-xl p-8 text-center">
+                <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
+                <p className="text-muted-foreground">No transactions on this date</p>
+              </div>
+            )}
           </div>
-        </DrawerContent>
-      </Drawer>
+        </div>
+      </ResponsiveModalLarge>
 
       </div>
     </ResponsiveLayout>

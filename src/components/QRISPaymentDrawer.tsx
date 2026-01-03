@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle, Copy, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from '@/components/ui/drawer';
+import { ResponsiveModalLarge } from '@/components/ResponsiveModal';
 
 interface QRISPaymentDrawerProps {
   open: boolean;
@@ -83,107 +78,101 @@ export const QRISPaymentDrawer: React.FC<QRISPaymentDrawerProps> = ({
   };
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[90vh] rounded-t-3xl">
-        <DrawerHeader className="pb-2">
-          <DrawerTitle className="text-xl font-bold text-center">QRIS Payment</DrawerTitle>
-        </DrawerHeader>
-
-        <div className="px-4 pb-8 space-y-4">
-          {isConfirmed ? (
-            <div className="text-center py-12 space-y-4 animate-scale-in">
-              <div className="w-24 h-24 bg-success/10 rounded-full flex items-center justify-center mx-auto">
-                <CheckCircle className="w-14 h-14 text-success" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-foreground">Payment Confirmed!</p>
-                <p className="text-muted-foreground mt-1">Transaction successful</p>
-              </div>
+    <ResponsiveModalLarge open={open} onOpenChange={onOpenChange} title="QRIS Payment">
+      <div className="space-y-4 pt-4">
+        {isConfirmed ? (
+          <div className="text-center py-12 space-y-4 animate-scale-in">
+            <div className="w-24 h-24 bg-success/10 rounded-full flex items-center justify-center mx-auto">
+              <CheckCircle className="w-14 h-14 text-success" />
             </div>
-          ) : (
-            <>
-              {/* Amount Display */}
-              <div className="bg-gradient-to-br from-primary/20 to-primary/5 rounded-3xl p-6 text-center">
-                <p className="text-sm text-muted-foreground uppercase tracking-wide">Amount to Pay</p>
-                <p className="text-4xl font-bold text-foreground mt-1">Rp {amount.toLocaleString('id-ID')}</p>
+            <div>
+              <p className="text-2xl font-bold text-foreground">Payment Confirmed!</p>
+              <p className="text-muted-foreground mt-1">Transaction successful</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Amount Display */}
+            <div className="bg-gradient-to-br from-primary/20 to-primary/5 rounded-3xl p-6 text-center">
+              <p className="text-sm text-muted-foreground uppercase tracking-wide">Amount to Pay</p>
+              <p className="text-4xl font-bold text-foreground mt-1">Rp {amount.toLocaleString('id-ID')}</p>
+            </div>
+
+            {/* QR Code */}
+            <div className="bg-secondary/30 rounded-3xl p-6 flex flex-col items-center">
+              <div className="w-52 h-52 bg-background rounded-2xl flex items-center justify-center border-2 border-border mb-4 shadow-inner">
+                <svg viewBox="0 0 100 100" className="w-44 h-44">
+                  <rect x="10" y="10" width="20" height="20" fill="currentColor" className="text-foreground" />
+                  <rect x="70" y="10" width="20" height="20" fill="currentColor" className="text-foreground" />
+                  <rect x="10" y="70" width="20" height="20" fill="currentColor" className="text-foreground" />
+                  <rect x="15" y="15" width="10" height="10" fill="currentColor" className="text-background" />
+                  <rect x="75" y="15" width="10" height="10" fill="currentColor" className="text-background" />
+                  <rect x="15" y="75" width="10" height="10" fill="currentColor" className="text-background" />
+                  <rect x="35" y="10" width="5" height="5" fill="currentColor" className="text-foreground" />
+                  <rect x="45" y="10" width="10" height="5" fill="currentColor" className="text-foreground" />
+                  <rect x="35" y="20" width="10" height="5" fill="currentColor" className="text-foreground" />
+                  <rect x="50" y="20" width="5" height="5" fill="currentColor" className="text-foreground" />
+                  <rect x="10" y="35" width="5" height="5" fill="currentColor" className="text-foreground" />
+                  <rect x="20" y="35" width="5" height="10" fill="currentColor" className="text-foreground" />
+                  <rect x="10" y="45" width="10" height="5" fill="currentColor" className="text-foreground" />
+                  <rect x="10" y="55" width="5" height="10" fill="currentColor" className="text-foreground" />
+                  <rect x="35" y="35" width="30" height="30" fill="currentColor" className="text-foreground" />
+                  <rect x="40" y="40" width="20" height="20" fill="currentColor" className="text-background" />
+                  <rect x="45" y="45" width="10" height="10" fill="currentColor" className="text-foreground" />
+                  <rect x="70" y="35" width="5" height="5" fill="currentColor" className="text-foreground" />
+                  <rect x="80" y="35" width="10" height="5" fill="currentColor" className="text-foreground" />
+                  <rect x="70" y="45" width="10" height="5" fill="currentColor" className="text-foreground" />
+                  <rect x="85" y="45" width="5" height="10" fill="currentColor" className="text-foreground" />
+                  <rect x="70" y="70" width="5" height="5" fill="currentColor" className="text-foreground" />
+                  <rect x="80" y="70" width="10" height="5" fill="currentColor" className="text-foreground" />
+                  <rect x="70" y="80" width="10" height="5" fill="currentColor" className="text-foreground" />
+                  <rect x="85" y="80" width="5" height="10" fill="currentColor" className="text-foreground" />
+                  <rect x="35" y="70" width="5" height="5" fill="currentColor" className="text-foreground" />
+                  <rect x="45" y="75" width="10" height="5" fill="currentColor" className="text-foreground" />
+                  <rect x="35" y="85" width="15" height="5" fill="currentColor" className="text-foreground" />
+                </svg>
               </div>
+              <p className="text-sm text-muted-foreground text-center">
+                Scan with any QRIS-enabled app
+              </p>
+            </div>
 
-              {/* QR Code */}
-              <div className="bg-secondary/30 rounded-3xl p-6 flex flex-col items-center">
-                <div className="w-52 h-52 bg-background rounded-2xl flex items-center justify-center border-2 border-border mb-4 shadow-inner">
-                  <svg viewBox="0 0 100 100" className="w-44 h-44">
-                    <rect x="10" y="10" width="20" height="20" fill="currentColor" className="text-foreground" />
-                    <rect x="70" y="10" width="20" height="20" fill="currentColor" className="text-foreground" />
-                    <rect x="10" y="70" width="20" height="20" fill="currentColor" className="text-foreground" />
-                    <rect x="15" y="15" width="10" height="10" fill="currentColor" className="text-background" />
-                    <rect x="75" y="15" width="10" height="10" fill="currentColor" className="text-background" />
-                    <rect x="15" y="75" width="10" height="10" fill="currentColor" className="text-background" />
-                    <rect x="35" y="10" width="5" height="5" fill="currentColor" className="text-foreground" />
-                    <rect x="45" y="10" width="10" height="5" fill="currentColor" className="text-foreground" />
-                    <rect x="35" y="20" width="10" height="5" fill="currentColor" className="text-foreground" />
-                    <rect x="50" y="20" width="5" height="5" fill="currentColor" className="text-foreground" />
-                    <rect x="10" y="35" width="5" height="5" fill="currentColor" className="text-foreground" />
-                    <rect x="20" y="35" width="5" height="10" fill="currentColor" className="text-foreground" />
-                    <rect x="10" y="45" width="10" height="5" fill="currentColor" className="text-foreground" />
-                    <rect x="10" y="55" width="5" height="10" fill="currentColor" className="text-foreground" />
-                    <rect x="35" y="35" width="30" height="30" fill="currentColor" className="text-foreground" />
-                    <rect x="40" y="40" width="20" height="20" fill="currentColor" className="text-background" />
-                    <rect x="45" y="45" width="10" height="10" fill="currentColor" className="text-foreground" />
-                    <rect x="70" y="35" width="5" height="5" fill="currentColor" className="text-foreground" />
-                    <rect x="80" y="35" width="10" height="5" fill="currentColor" className="text-foreground" />
-                    <rect x="70" y="45" width="10" height="5" fill="currentColor" className="text-foreground" />
-                    <rect x="85" y="45" width="5" height="10" fill="currentColor" className="text-foreground" />
-                    <rect x="70" y="70" width="5" height="5" fill="currentColor" className="text-foreground" />
-                    <rect x="80" y="70" width="10" height="5" fill="currentColor" className="text-foreground" />
-                    <rect x="70" y="80" width="10" height="5" fill="currentColor" className="text-foreground" />
-                    <rect x="85" y="80" width="5" height="10" fill="currentColor" className="text-foreground" />
-                    <rect x="35" y="70" width="5" height="5" fill="currentColor" className="text-foreground" />
-                    <rect x="45" y="75" width="10" height="5" fill="currentColor" className="text-foreground" />
-                    <rect x="35" y="85" width="15" height="5" fill="currentColor" className="text-foreground" />
-                  </svg>
-                </div>
-                <p className="text-sm text-muted-foreground text-center">
-                  Scan with any QRIS-enabled app
-                </p>
-              </div>
+            {/* Countdown */}
+            <div className="text-center py-2">
+              <p className="text-sm text-muted-foreground">
+                Expires in <span className="font-bold text-warning">{formatCountdown(countdown)}</span>
+              </p>
+            </div>
 
-              {/* Countdown */}
-              <div className="text-center py-2">
-                <p className="text-sm text-muted-foreground">
-                  Expires in <span className="font-bold text-warning">{formatCountdown(countdown)}</span>
-                </p>
-              </div>
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <button
+                onClick={handleCopyCode}
+                className="w-full h-12 bg-secondary text-foreground font-medium rounded-2xl hover:bg-muted active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              >
+                <Copy className="w-4 h-4" />
+                Copy QRIS Code
+              </button>
 
-              {/* Action Buttons */}
-              <div className="space-y-3">
-                <button
-                  onClick={handleCopyCode}
-                  className="w-full h-12 bg-secondary text-foreground font-medium rounded-2xl hover:bg-muted active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-                >
-                  <Copy className="w-4 h-4" />
-                  Copy QRIS Code
-                </button>
+              <button
+                onClick={handleCheckPayment}
+                disabled={isChecking}
+                className="w-full h-12 bg-secondary/50 border border-border text-foreground font-medium rounded-2xl hover:bg-secondary active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${isChecking ? 'animate-spin' : ''}`} />
+                {isChecking ? 'Checking...' : 'Check Payment Status'}
+              </button>
 
-                <button
-                  onClick={handleCheckPayment}
-                  disabled={isChecking}
-                  className="w-full h-12 bg-secondary/50 border border-border text-foreground font-medium rounded-2xl hover:bg-secondary active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  <RefreshCw className={`w-4 h-4 ${isChecking ? 'animate-spin' : ''}`} />
-                  {isChecking ? 'Checking...' : 'Check Payment Status'}
-                </button>
-
-                <button
-                  onClick={handleSimulatePayment}
-                  className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all btn-primary-glow"
-                >
-                  Simulate Payment (Demo)
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      </DrawerContent>
-    </Drawer>
+              <button
+                onClick={handleSimulatePayment}
+                className="w-full h-14 bg-primary text-primary-foreground font-semibold rounded-2xl hover:opacity-90 active:scale-[0.98] transition-all btn-primary-glow"
+              >
+                Simulate Payment (Demo)
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </ResponsiveModalLarge>
   );
 };

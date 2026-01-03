@@ -11,13 +11,6 @@ import { useSubscription } from '@/context/SubscriptionContext';
 import { useToast } from '@/hooks/use-toast';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerClose,
-} from '@/components/ui/drawer';
-import {
   Table,
   TableBody,
   TableCell,
@@ -605,167 +598,154 @@ const Reports: React.FC = () => {
         </div>
       </main>
 
-      {/* Transaction Detail Drawer */}
-      <Drawer open={showTransactionDetail} onOpenChange={setShowTransactionDetail}>
-        <DrawerContent className="max-h-[85vh]">
-          <DrawerHeader className="border-b border-border pb-4">
-            <DrawerTitle className="text-center">Transaction Details</DrawerTitle>
-          </DrawerHeader>
-          
-          {selectedTransaction && (
-            <ScrollArea className="p-4 max-h-[60vh]">
-              <div className="space-y-4">
-                {/* Transaction Info */}
-                <div className="bg-muted/50 rounded-xl p-4 space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Transaction ID</span>
-                    <span className="font-mono text-foreground text-xs">{selectedTransaction.id.slice(0, 8)}...</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Date & Time</span>
-                    <span className="text-foreground">
-                      {format(new Date(selectedTransaction.timestamp), 'MMM d, yyyy HH:mm')}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Payment Method</span>
-                    <span className="capitalize text-foreground">{selectedTransaction.paymentMethod}</span>
-                  </div>
-                  {selectedTransaction.customer && (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Customer</span>
-                      <span className="text-foreground">{selectedTransaction.customer.name}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Items Table */}
-                <div>
-                  <h4 className="font-semibold text-foreground mb-2">Items</h4>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Item</TableHead>
-                        <TableHead className="text-center">Qty</TableHead>
-                        <TableHead className="text-right">Price</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {selectedTransaction.items.map((item, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">{item.name}</TableCell>
-                          <TableCell className="text-center">{item.quantity}</TableCell>
-                          <TableCell className="text-right">${(item.price * item.quantity).toFixed(2)}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-
-                {/* Totals */}
-                <div className="bg-muted/50 rounded-xl p-4 space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal</span>
-                    <span className="text-foreground">${selectedTransaction.subtotal.toFixed(2)}</span>
-                  </div>
-                  {selectedTransaction.discount > 0 && (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Discount</span>
-                      <span className="text-destructive">-${selectedTransaction.discount.toFixed(2)}</span>
-                    </div>
-                  )}
-                  {selectedTransaction.tax > 0 && (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Tax</span>
-                      <span className="text-foreground">${selectedTransaction.tax.toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className="h-px bg-border my-2" />
-                  <div className="flex items-center justify-between font-semibold">
-                    <span className="text-foreground">Total</span>
-                    <span className="text-primary text-lg">${selectedTransaction.total.toFixed(2)}</span>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2">
-                  {hasFeature('receiptExport') ? (
-                    <button
-                      onClick={() => {
-                        toast({
-                          title: 'Receipt printed!',
-                          description: 'Receipt has been sent to printer.',
-                        });
-                      }}
-                      className="flex-1 h-12 bg-secondary text-foreground font-medium rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2"
-                    >
-                      <FileText className="w-5 h-5" />
-                      Print Receipt
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => navigate('/subscription')}
-                      className="flex-1 h-12 bg-muted text-muted-foreground font-medium rounded-xl hover:bg-muted/80 transition-all flex items-center justify-center gap-2"
-                    >
-                      <Lock className="w-4 h-4" />
-                      Print (Upgrade)
-                    </button>
-                  )}
-                  <DrawerClose asChild>
-                    <button className="flex-1 h-12 bg-primary text-primary-foreground font-medium rounded-xl hover:opacity-90 transition-all">
-                      Close
-                    </button>
-                  </DrawerClose>
-                </div>
+      {/* Transaction Detail Modal */}
+      <ResponsiveModalLarge open={showTransactionDetail} onOpenChange={setShowTransactionDetail} title="Transaction Details">
+        {selectedTransaction && (
+          <div className="space-y-4 pt-4">
+            {/* Transaction Info */}
+            <div className="bg-muted/50 rounded-xl p-4 space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Transaction ID</span>
+                <span className="font-mono text-foreground text-xs">{selectedTransaction.id.slice(0, 8)}...</span>
               </div>
-            </ScrollArea>
-          )}
-        </DrawerContent>
-      </Drawer>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Date & Time</span>
+                <span className="text-foreground">
+                  {format(new Date(selectedTransaction.timestamp), 'MMM d, yyyy HH:mm')}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Payment Method</span>
+                <span className="capitalize text-foreground">{selectedTransaction.paymentMethod}</span>
+              </div>
+              {selectedTransaction.customer && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Customer</span>
+                  <span className="text-foreground">{selectedTransaction.customer.name}</span>
+                </div>
+              )}
+            </div>
 
-      {/* Date Range Picker Drawer */}
-      <Drawer open={showDatePicker} onOpenChange={setShowDatePicker}>
-        <DrawerContent className="max-h-[85vh]">
-          <DrawerHeader className="border-b border-border pb-4">
-            <DrawerTitle className="text-center">Select Date Range</DrawerTitle>
-          </DrawerHeader>
-          
-          <div className="p-4 space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Start Date</label>
-              <div className="flex justify-center">
-                <CalendarComponent
-                  mode="single"
-                  selected={customStartDate}
-                  onSelect={setCustomStartDate}
-                  className="rounded-xl border border-border"
-                />
+            {/* Items Table */}
+            <div>
+              <h4 className="font-semibold text-foreground mb-2">Items</h4>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Item</TableHead>
+                    <TableHead className="text-center">Qty</TableHead>
+                    <TableHead className="text-right">Price</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {selectedTransaction.items.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{item.name}</TableCell>
+                      <TableCell className="text-center">{item.quantity}</TableCell>
+                      <TableCell className="text-right">${(item.price * item.quantity).toFixed(2)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Totals */}
+            <div className="bg-muted/50 rounded-xl p-4 space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="text-foreground">${selectedTransaction.subtotal.toFixed(2)}</span>
+              </div>
+              {selectedTransaction.discount > 0 && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Discount</span>
+                  <span className="text-destructive">-${selectedTransaction.discount.toFixed(2)}</span>
+                </div>
+              )}
+              {selectedTransaction.tax > 0 && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Tax</span>
+                  <span className="text-foreground">${selectedTransaction.tax.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="h-px bg-border my-2" />
+              <div className="flex items-center justify-between font-semibold">
+                <span className="text-foreground">Total</span>
+                <span className="text-primary text-lg">${selectedTransaction.total.toFixed(2)}</span>
               </div>
             </div>
-            
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">End Date</label>
-              <div className="flex justify-center">
-                <CalendarComponent
-                  mode="single"
-                  selected={customEndDate}
-                  onSelect={setCustomEndDate}
-                  disabled={(date) => customStartDate ? date < customStartDate : false}
-                  className="rounded-xl border border-border"
-                />
-              </div>
+
+            {/* Actions */}
+            <div className="flex gap-2">
+              {hasFeature('receiptExport') ? (
+                <button
+                  onClick={() => {
+                    toast({
+                      title: 'Receipt printed!',
+                      description: 'Receipt has been sent to printer.',
+                    });
+                  }}
+                  className="flex-1 h-12 bg-secondary text-foreground font-medium rounded-xl hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                >
+                  <FileText className="w-5 h-5" />
+                  Print Receipt
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate('/subscription')}
+                  className="flex-1 h-12 bg-muted text-muted-foreground font-medium rounded-xl hover:bg-muted/80 transition-all flex items-center justify-center gap-2"
+                >
+                  <Lock className="w-4 h-4" />
+                  Print (Upgrade)
+                </button>
+              )}
+              <button 
+                onClick={() => setShowTransactionDetail(false)}
+                className="flex-1 h-12 bg-primary text-primary-foreground font-medium rounded-xl hover:opacity-90 transition-all"
+              >
+                Close
+              </button>
             </div>
-            
-            <button
-              onClick={handleDateRangeConfirm}
-              disabled={!customStartDate || !customEndDate}
-              className="w-full h-12 bg-primary text-primary-foreground font-medium rounded-2xl hover:opacity-90 transition-all disabled:opacity-50"
-            >
-              Apply Range
-            </button>
           </div>
-        </DrawerContent>
-      </Drawer>
+        )}
+      </ResponsiveModalLarge>
+
+      {/* Date Range Picker Modal */}
+      <ResponsiveModalLarge open={showDatePicker} onOpenChange={setShowDatePicker} title="Select Date Range">
+        <div className="space-y-4 pt-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">Start Date</label>
+            <div className="flex justify-center">
+              <CalendarComponent
+                mode="single"
+                selected={customStartDate}
+                onSelect={setCustomStartDate}
+                className="rounded-xl border border-border"
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">End Date</label>
+            <div className="flex justify-center">
+              <CalendarComponent
+                mode="single"
+                selected={customEndDate}
+                onSelect={setCustomEndDate}
+                disabled={(date) => customStartDate ? date < customStartDate : false}
+                className="rounded-xl border border-border"
+              />
+            </div>
+          </div>
+          
+          <button
+            onClick={handleDateRangeConfirm}
+            disabled={!customStartDate || !customEndDate}
+            className="w-full h-12 bg-primary text-primary-foreground font-medium rounded-2xl hover:opacity-90 transition-all disabled:opacity-50"
+          >
+            Apply Range
+          </button>
+        </div>
+      </ResponsiveModalLarge>
 
       </div>
     </ResponsiveLayout>
